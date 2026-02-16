@@ -43,11 +43,11 @@ export default function Index() {
 
   useEffect(() => {
     (async () => {
-      const [{ count: actCount }, { count: userCount }] = await Promise.all([
-        supabase.from("activities").select("*", { count: "exact", head: true }).eq("status", "approved"),
-        supabase.from("profiles").select("*", { count: "exact", head: true }),
-      ]);
-      setStats({ activities: actCount ?? 0, users: userCount ?? 0 });
+      const { data, error } = await supabase.rpc("get_landing_stats");
+      if (!error && data) {
+        const d = data as { activities: number; users: number };
+        setStats({ activities: d.activities ?? 0, users: d.users ?? 0 });
+      }
     })();
   }, []);
 

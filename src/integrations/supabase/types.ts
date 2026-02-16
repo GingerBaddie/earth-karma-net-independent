@@ -273,6 +273,7 @@ export type Database = {
         Args: { p_code: string; p_event_id: string }
         Returns: undefined
       }
+      get_landing_stats: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
