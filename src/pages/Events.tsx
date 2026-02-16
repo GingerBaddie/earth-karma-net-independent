@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
@@ -72,27 +73,23 @@ export default function Events() {
           ) : (
             <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {events.map((e, i) => (
-                <Card key={e.id} className="group relative flex flex-col overflow-hidden transition-shadow hover:shadow-lg hover:shadow-primary/5">
-                  <LeafSVG className={`pointer-events-none absolute -right-4 -top-4 h-20 w-20 text-primary transition-opacity ${i % 2 === 0 ? "rotate-12" : "-rotate-[30deg]"}`} />
-                  <CardHeader>
-                    <CardTitle className="font-display text-lg">{e.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex flex-1 flex-col justify-between gap-4">
-                    <div className="space-y-2 text-sm text-muted-foreground">
-                      {e.description && <p className="text-foreground">{e.description}</p>}
-                      <div className="flex items-center gap-1"><CalendarDays className="h-4 w-4" /> {new Date(e.event_date).toLocaleDateString(undefined, { weekday: "short", year: "numeric", month: "short", day: "numeric" })}</div>
-                      {e.location && <div className="flex items-center gap-1"><MapPin className="h-4 w-4" /> {e.location}</div>}
-                      <div className="flex items-center gap-1"><Users className="h-4 w-4" /> {e.participant_count} participant{e.participant_count !== 1 ? "s" : ""}</div>
-                    </div>
-                    {user && (
-                      e.joined ? (
-                        <Button variant="outline" size="sm" onClick={() => handleLeave(e.id)}>Leave Event</Button>
-                      ) : (
-                        <Button size="sm" className="shadow-sm shadow-primary/10" onClick={() => handleJoin(e.id)}>Join Event</Button>
-                      )
-                    )}
-                  </CardContent>
-                </Card>
+                <Link to={`/events/${e.id}`} key={e.id} className="block">
+                  <Card className="group relative flex flex-col overflow-hidden transition-shadow hover:shadow-lg hover:shadow-primary/5">
+                    <LeafSVG className={`pointer-events-none absolute -right-4 -top-4 h-20 w-20 text-primary transition-opacity ${i % 2 === 0 ? "rotate-12" : "-rotate-[30deg]"}`} />
+                    <CardHeader>
+                      <CardTitle className="font-display text-lg">{e.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-1 flex-col justify-between gap-4">
+                      <div className="space-y-2 text-sm text-muted-foreground">
+                        {e.description && <p className="text-foreground">{e.description}</p>}
+                        <div className="flex items-center gap-1"><CalendarDays className="h-4 w-4" /> {new Date(e.event_date).toLocaleDateString(undefined, { weekday: "short", year: "numeric", month: "short", day: "numeric" })}</div>
+                        {e.location && <div className="flex items-center gap-1"><MapPin className="h-4 w-4" /> {e.location}</div>}
+                        <div className="flex items-center gap-1"><Users className="h-4 w-4" /> {e.participant_count} participant{e.participant_count !== 1 ? "s" : ""}</div>
+                      </div>
+                      <span className="text-xs font-medium text-primary">View Details →</span>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           )}
