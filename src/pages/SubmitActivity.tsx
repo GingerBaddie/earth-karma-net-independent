@@ -23,12 +23,12 @@ type VerificationResult = {
   reason: string;
 };
 
-const TYPES: { value: ActivityType; label: string; points: number }[] = [
-  { value: "tree_plantation", label: "🌳 Tree Plantation", points: 50 },
-  { value: "cleanup", label: "🧹 Cleanup Drive", points: 30 },
-  { value: "recycling", label: "♻️ Recycling", points: 20 },
-  { value: "eco_habit", label: "🌿 Eco-Friendly Habit", points: 5 },
-];
+const TYPES: {value: ActivityType;label: string;points: number;}[] = [
+{ value: "tree_plantation", label: "🌳 Tree Plantation", points: 50 },
+{ value: "cleanup", label: "🧹 Cleanup Drive", points: 30 },
+{ value: "recycling", label: "♻️ Recycling", points: 20 },
+{ value: "eco_habit", label: "🌿 Eco-Friendly Habit", points: 5 }];
+
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -59,7 +59,7 @@ export default function SubmitActivity() {
   useEffect(() => {
     setLocLoading(true);
     navigator.geolocation.getCurrentPosition(
-      (pos) => { setLat(pos.coords.latitude); setLng(pos.coords.longitude); setLocLoading(false); },
+      (pos) => {setLat(pos.coords.latitude);setLng(pos.coords.longitude);setLocLoading(false);},
       () => setLocLoading(false)
     );
   }, []);
@@ -85,7 +85,7 @@ export default function SubmitActivity() {
       const base64 = await fileToBase64(file);
 
       const { data, error } = await supabase.functions.invoke("verify-activity-image", {
-        body: { imageBase64: base64, activityType },
+        body: { imageBase64: base64, activityType }
       });
 
       if (controller.signal.aborted) return;
@@ -136,7 +136,7 @@ export default function SubmitActivity() {
         image_url,
         latitude: lat,
         longitude: lng,
-        waste_kg: type === "cleanup" && wasteKg ? parseFloat(wasteKg) : null,
+        waste_kg: type === "cleanup" && wasteKg ? parseFloat(wasteKg) : null
       } as any);
       if (error) throw error;
 
@@ -171,19 +171,19 @@ export default function SubmitActivity() {
                 <div className="space-y-2">
                   <Label>Activity Type</Label>
                   <div className="grid grid-cols-2 gap-3">
-                    {TYPES.map((t) => (
-                      <button
-                        key={t.value}
-                        type="button"
-                        onClick={() => setType(t.value)}
-                        className={`rounded-lg border-2 p-3 text-left text-sm transition-all hover:scale-[1.02] ${
-                          type === t.value ? "border-primary bg-primary/10 shadow-sm shadow-primary/10" : "border-border hover:border-primary/50"
-                        }`}
-                      >
+                    {TYPES.map((t) =>
+                    <button
+                      key={t.value}
+                      type="button"
+                      onClick={() => setType(t.value)}
+                      className={`rounded-lg border-2 p-3 text-left text-sm transition-all hover:scale-[1.02] ${
+                      type === t.value ? "border-primary bg-primary/10 shadow-sm shadow-primary/10" : "border-border hover:border-primary/50"}`
+                      }>
+
                         <div className="font-medium">{t.label}</div>
                         <div className="text-xs text-muted-foreground">+{t.points} points</div>
                       </button>
-                    ))}
+                    )}
                   </div>
                 </div>
 
@@ -192,20 +192,20 @@ export default function SubmitActivity() {
                   <Input id="desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What did you do?" />
                 </div>
 
-                {type === "cleanup" && (
-                  <div className="space-y-2">
+                {type === "cleanup" &&
+                <div className="space-y-2">
                     <Label htmlFor="wasteKg">Waste Collected (kg)</Label>
                     <Input
-                      id="wasteKg"
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      value={wasteKg}
-                      onChange={(e) => setWasteKg(e.target.value)}
-                      placeholder="e.g. 5.5"
-                    />
+                    id="wasteKg"
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    value={wasteKg}
+                    onChange={(e) => setWasteKg(e.target.value)}
+                    placeholder="e.g. 5.5" />
+
                   </div>
-                )}
+                }
 
                 <div className="space-y-2">
                   <Label>Photo Evidence</Label>
@@ -217,66 +217,66 @@ export default function SubmitActivity() {
                 </div>
 
                 {/* AI Verification Status */}
-                {verifying && (
-                  <Alert className="border-primary/30 bg-primary/5">
+                {verifying &&
+                <Alert className="border-primary/30 bg-primary/5">
                     <Loader2 className="h-4 w-4 animate-spin text-primary" />
                     <AlertDescription className="flex items-center gap-2">
                       Verifying image with AI...
                     </AlertDescription>
                   </Alert>
-                )}
+                }
 
                 {verificationResult && !verifying && (
-                  verificationResult.match ? (
-                    <Alert className="border-green-500/30 bg-green-500/5">
+                verificationResult.match ?
+                <Alert className="border-green-500/30 bg-green-500/5">
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
                       <AlertDescription className="flex items-center gap-2 text-green-700">
                         {verificationResult.reason}
-                        {verificationResult.confidence > 0 && (
-                          <Badge variant="secondary" className="ml-auto text-xs">
+                        {verificationResult.confidence > 0 &&
+                    <Badge variant="secondary" className="ml-auto text-xs">
                             {Math.round(verificationResult.confidence * 100)}% confident
                           </Badge>
-                        )}
+                    }
                       </AlertDescription>
-                    </Alert>
-                  ) : (
-                    <Alert className="border-destructive/30 bg-destructive/5">
+                    </Alert> :
+
+                <Alert className="border-destructive/30 bg-destructive/5">
                       <AlertTriangle className="h-4 w-4 text-destructive" />
                       <AlertDescription className="text-destructive">
                         <p>{verificationResult.reason}</p>
-                        {verificationResult.confidence > 0 && verificationResult.confidence < 0.5 ? (
-                          <p className="mt-1 text-xs font-medium">
+                        {verificationResult.confidence > 0 && verificationResult.confidence < 0.5 ?
+                    <p className="mt-1 text-xs font-medium">
                             ⚠️ AI confidence is below 50%. Please upload a different photo that clearly shows the activity.
-                          </p>
-                        ) : (
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            You can still submit — an organizer will review it.
-                          </p>
-                        )}
+                          </p> :
+
+                    <p className="mt-1 text-xs text-muted-foreground">
+
+                    </p>
+                    }
                       </AlertDescription>
-                    </Alert>
-                  )
-                )}
+                    </Alert>)
+
+                }
 
                 <div className="space-y-2">
                   <Label className="flex items-center gap-1"><MapPin className="h-4 w-4" /> Location</Label>
-                  {locLoading ? (
-                    <p className="text-sm text-muted-foreground">Detecting location...</p>
-                  ) : lat && lng ? (
-                    <div className="space-y-1">
+                  {locLoading ?
+                  <p className="text-sm text-muted-foreground">Detecting location...</p> :
+                  lat && lng ?
+                  <div className="space-y-1">
                       <p className="text-sm text-muted-foreground">📍 {lat.toFixed(4)}, {lng.toFixed(4)}</p>
-                      {addressLoading ? (
-                        <p className="text-xs text-muted-foreground">Resolving address...</p>
-                      ) : address ? (
-                        <p className="text-xs text-foreground/70">🏠 {address}</p>
-                      ) : null}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-destructive">Location unavailable. Please allow location access.</p>
-                  )}
+                      {addressLoading ?
+                    <p className="text-xs text-muted-foreground">Resolving address...</p> :
+                    address ?
+                    <p className="text-xs text-foreground/70">🏠 {address}</p> :
+                    null}
+                    </div> :
+
+                  <p className="text-sm text-destructive">Location unavailable. Please allow location access.</p>
+                  }
                 </div>
 
-                <Button type="submit" className="w-full shadow-lg shadow-primary/20" disabled={submitting || verifying || (verificationResult !== null && !verificationResult.match)}>
+                <Button type="submit" className="w-full shadow-lg shadow-primary/20" disabled={submitting || verifying || verificationResult !== null && verificationResult.confidence > 0 && verificationResult.confidence < 0.5}>
                   {submitting ? "Submitting..." : `Submit ${selected.label}`}
                 </Button>
               </form>
@@ -284,6 +284,6 @@ export default function SubmitActivity() {
           </Card>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }
