@@ -13,6 +13,7 @@ import SubmitActivity from "./pages/SubmitActivity";
 import Events from "./pages/Events";
 import Leaderboard from "./pages/Leaderboard";
 import Admin from "./pages/Admin";
+import EventDetail from "./pages/EventDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/submit" element={<ProtectedRoute><SubmitActivity /></ProtectedRoute>} />
             <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
+            <Route path="/events/:id" element={<ProtectedRoute><EventDetail /></ProtectedRoute>} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/admin" element={<ProtectedRoute requireRole="organizer"><Admin /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />

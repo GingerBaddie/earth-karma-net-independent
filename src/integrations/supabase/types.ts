@@ -56,6 +56,38 @@ export type Database = {
         }
         Relationships: []
       }
+      event_checkins: {
+        Row: {
+          checked_in_at: string
+          event_id: string
+          id: string
+          points_awarded: number
+          user_id: string
+        }
+        Insert: {
+          checked_in_at?: string
+          event_id: string
+          id?: string
+          points_awarded?: number
+          user_id: string
+        }
+        Update: {
+          checked_in_at?: string
+          event_id?: string
+          id?: string
+          points_awarded?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_checkins_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_participants: {
         Row: {
           event_id: string
@@ -87,6 +119,8 @@ export type Database = {
       }
       events: {
         Row: {
+          attendance_points: number
+          checkin_code: string | null
           created_at: string
           created_by: string
           description: string | null
@@ -96,6 +130,8 @@ export type Database = {
           title: string
         }
         Insert: {
+          attendance_points?: number
+          checkin_code?: string | null
           created_at?: string
           created_by: string
           description?: string | null
@@ -105,6 +141,8 @@ export type Database = {
           title: string
         }
         Update: {
+          attendance_points?: number
+          checkin_code?: string | null
           created_at?: string
           created_by?: string
           description?: string | null
@@ -222,6 +260,10 @@ export type Database = {
     }
     Functions: {
       approve_activity: { Args: { activity_id: string }; Returns: undefined }
+      checkin_event: {
+        Args: { p_code: string; p_event_id: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
@@ -166,11 +167,14 @@ export default function Admin() {
                 {events.map((e) => (
                   <Card key={e.id} className="transition-shadow hover:shadow-sm">
                     <CardContent className="flex items-center justify-between p-4">
-                      <div>
-                        <p className="font-medium">{e.title}</p>
+                      <Link to={`/events/${e.id}`} className="flex-1">
+                        <p className="font-medium hover:text-primary">{e.title}</p>
                         <p className="text-xs text-muted-foreground">{new Date(e.event_date).toLocaleDateString()} · {e.location}</p>
+                      </Link>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" asChild><Link to={`/events/${e.id}`}>QR Code</Link></Button>
+                        <Button size="sm" variant="destructive" onClick={() => handleDeleteEvent(e.id)}>Delete</Button>
                       </div>
-                      <Button size="sm" variant="destructive" onClick={() => handleDeleteEvent(e.id)}>Delete</Button>
                     </CardContent>
                   </Card>
                 ))}
