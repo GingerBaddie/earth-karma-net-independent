@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { Leaf } from "lucide-react";
+import { FloatingLeaves, TreeSVG, BranchSVG } from "@/components/NatureDecorations";
 import type { Database } from "@/integrations/supabase/types";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
@@ -35,8 +36,15 @@ export default function Register() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 px-4">
-      <Card className="w-full max-w-md">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 px-4">
+      <FloatingLeaves />
+      <TreeSVG className="pointer-events-none absolute bottom-0 left-[3%] h-52 w-52 text-eco-leaf" />
+      <TreeSVG className="pointer-events-none absolute bottom-0 right-[6%] h-44 w-44 text-primary" />
+      <BranchSVG className="pointer-events-none absolute left-0 top-16 h-14 w-48 text-primary" />
+      <BranchSVG className="pointer-events-none absolute right-0 top-36 h-12 w-44 rotate-[8deg] text-accent" />
+
+      <Card className="relative z-10 w-full max-w-md overflow-hidden">
+        <div className="absolute -left-6 -top-6 text-8xl opacity-[0.04]">🌱</div>
         <CardHeader className="text-center">
           <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
             <Leaf className="h-6 w-6 text-primary" />
@@ -66,8 +74,8 @@ export default function Register() {
                     key={r}
                     type="button"
                     onClick={() => setRole(r)}
-                    className={`rounded-lg border-2 p-3 text-center text-sm font-medium transition-colors ${
-                      role === r ? "border-primary bg-primary/10 text-primary" : "border-border hover:border-primary/50"
+                    className={`rounded-lg border-2 p-3 text-center text-sm font-medium transition-all hover:scale-[1.02] ${
+                      role === r ? "border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10" : "border-border hover:border-primary/50"
                     }`}
                   >
                     {r === "citizen" ? "🌱 Citizen" : "🛡️ Organizer"}
@@ -75,7 +83,7 @@ export default function Register() {
                 ))}
               </div>
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full shadow-lg shadow-primary/20" disabled={loading}>
               {loading ? "Creating account..." : "Create Account"}
             </Button>
           </form>

@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { MapPin, Upload, Leaf } from "lucide-react";
+import { PageHeaderDecor, FloatingLeaves, TreeSVG } from "@/components/NatureDecorations";
 import type { Database } from "@/integrations/supabase/types";
 
 type ActivityType = Database["public"]["Enums"]["activity_type"];
@@ -78,68 +79,71 @@ export default function SubmitActivity() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="container mx-auto max-w-2xl px-4 py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-display text-2xl flex items-center gap-2"><Leaf className="h-6 w-6 text-primary" /> Submit Activity</CardTitle>
-            <CardDescription>Record your environmental contribution. An organizer will verify it.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Type selection */}
-              <div className="space-y-2">
-                <Label>Activity Type</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  {TYPES.map((t) => (
-                    <button
-                      key={t.value}
-                      type="button"
-                      onClick={() => setType(t.value)}
-                      className={`rounded-lg border-2 p-3 text-left text-sm transition-colors ${
-                        type === t.value ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
-                      }`}
-                    >
-                      <div className="font-medium">{t.label}</div>
-                      <div className="text-xs text-muted-foreground">+{t.points} points</div>
-                    </button>
-                  ))}
+      <div className="relative">
+        <PageHeaderDecor />
+        <FloatingLeaves />
+        <TreeSVG className="pointer-events-none absolute bottom-0 left-[2%] h-48 w-48 text-primary" />
+
+        <div className="container relative mx-auto max-w-2xl px-4 py-8">
+          <Card className="overflow-hidden">
+            <CardHeader className="relative">
+              <div className="absolute -right-6 -top-6 text-7xl opacity-[0.04]">🌳</div>
+              <CardTitle className="font-display text-2xl flex items-center gap-2"><Leaf className="h-6 w-6 text-primary" /> Submit Activity</CardTitle>
+              <CardDescription>Record your environmental contribution. An organizer will verify it.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <Label>Activity Type</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {TYPES.map((t) => (
+                      <button
+                        key={t.value}
+                        type="button"
+                        onClick={() => setType(t.value)}
+                        className={`rounded-lg border-2 p-3 text-left text-sm transition-all hover:scale-[1.02] ${
+                          type === t.value ? "border-primary bg-primary/10 shadow-sm shadow-primary/10" : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <div className="font-medium">{t.label}</div>
+                        <div className="text-xs text-muted-foreground">+{t.points} points</div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {/* Description */}
-              <div className="space-y-2">
-                <Label htmlFor="desc">Description (optional)</Label>
-                <Input id="desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What did you do?" />
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="desc">Description (optional)</Label>
+                  <Input id="desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What did you do?" />
+                </div>
 
-              {/* Image */}
-              <div className="space-y-2">
-                <Label>Photo Evidence</Label>
-                <label className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed border-border p-6 transition-colors hover:border-primary/50">
-                  <Upload className="h-8 w-8 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">{image ? image.name : "Click to upload an image"}</span>
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => setImage(e.target.files?.[0] ?? null)} />
-                </label>
-              </div>
+                <div className="space-y-2">
+                  <Label>Photo Evidence</Label>
+                  <label className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed border-border p-6 transition-all hover:border-primary/50 hover:bg-primary/[0.02]">
+                    <Upload className="h-8 w-8 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">{image ? image.name : "Click to upload an image"}</span>
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => setImage(e.target.files?.[0] ?? null)} />
+                  </label>
+                </div>
 
-              {/* Geo */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-1"><MapPin className="h-4 w-4" /> Location</Label>
-                {locLoading ? (
-                  <p className="text-sm text-muted-foreground">Detecting location...</p>
-                ) : lat && lng ? (
-                  <p className="text-sm text-muted-foreground">📍 {lat.toFixed(4)}, {lng.toFixed(4)}</p>
-                ) : (
-                  <p className="text-sm text-destructive">Location unavailable. Please allow location access.</p>
-                )}
-              </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-1"><MapPin className="h-4 w-4" /> Location</Label>
+                  {locLoading ? (
+                    <p className="text-sm text-muted-foreground">Detecting location...</p>
+                  ) : lat && lng ? (
+                    <p className="text-sm text-muted-foreground">📍 {lat.toFixed(4)}, {lng.toFixed(4)}</p>
+                  ) : (
+                    <p className="text-sm text-destructive">Location unavailable. Please allow location access.</p>
+                  )}
+                </div>
 
-              <Button type="submit" className="w-full" disabled={submitting}>
-                {submitting ? "Submitting..." : `Submit ${selected.label}`}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+                <Button type="submit" className="w-full shadow-lg shadow-primary/20" disabled={submitting}>
+                  {submitting ? "Submitting..." : `Submit ${selected.label}`}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
