@@ -5,17 +5,19 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { CalendarDays, MapPin, Users } from "lucide-react";
+import { CalendarDays, MapPin, Users, Filter } from "lucide-react";
 import { PageHeaderDecor, BranchSVG, LeafSVG } from "@/components/NatureDecorations";
 import type { Database } from "@/integrations/supabase/types";
 
 type Event = Database["public"]["Tables"]["events"]["Row"];
 
 export default function Events() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [events, setEvents] = useState<(Event & { participant_count: number; joined: boolean })[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterByCity, setFilterByCity] = useState(true);
 
   const fetchEvents = async () => {
     const { data: eventsData } = await supabase.from("events").select("*").order("event_date", { ascending: true });
@@ -47,6 +49,11 @@ export default function Events() {
     fetchEvents();
   };
 
+  const userCity = profile?.city?.toLowerCase().trim();
+  const filteredEvents = filterByCity && userCity
+    ? events.filter((e) => e.location?.toLowerCase().includes(userCity))
+    : events;
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -55,24 +62,40 @@ export default function Events() {
         <BranchSVG className="pointer-events-none absolute right-0 top-40 h-16 w-56 text-eco-leaf" />
 
         <div className="container relative mx-auto px-4 py-8">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">📅</span>
-            <div>
-              <h1 className="font-display text-3xl font-bold">Events</h1>
-              <p className="text-muted-foreground">Join upcoming environmental events in your community.</p>
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">📅</span>
+              <div>
+                <h1 className="font-display text-3xl font-bold">Events</h1>
+                <p className="text-muted-foreground">Join upcoming environmental events in your community.</p>
+              </div>
             </div>
+            {userCity && (
+              <Button
+                variant={filterByCity ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilterByCity(!filterByCity)}
+                className="gap-1"
+              >
+                <Filter className="h-4 w-4" />
+                {filterByCity ? `Near ${profile?.city}` : "All Events"}
+              </Button>
+            )}
           </div>
 
           {loading ? (
             <div className="mt-12 flex justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>
-          ) : events.length === 0 ? (
+          ) : filteredEvents.length === 0 ? (
             <div className="mt-16 flex flex-col items-center gap-3 text-center">
               <span className="text-5xl">🌻</span>
-              <p className="text-muted-foreground">No events yet. Check back soon!</p>
+              <p className="text-muted-foreground">{filterByCity && userCity ? `No events near ${profile?.city}. Try viewing all events.` : "No events yet. Check back soon!"}</p>
+              {filterByCity && userCity && (
+                <Button variant="outline" size="sm" onClick={() => setFilterByCity(false)}>Show All Events</Button>
+              )}
             </div>
           ) : (
             <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {events.map((e, i) => (
+              {filteredEvents.map((e, i) => (
                 <Link to={`/events/${e.id}`} key={e.id} className="block">
                   <Card className="group relative flex flex-col overflow-hidden transition-shadow hover:shadow-lg hover:shadow-primary/5">
                     <LeafSVG className={`pointer-events-none absolute -right-4 -top-4 h-20 w-20 text-primary transition-opacity ${i % 2 === 0 ? "rotate-12" : "-rotate-[30deg]"}`} />

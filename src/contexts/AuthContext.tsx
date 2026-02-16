@@ -11,7 +11,7 @@ interface AuthContextType {
   role: AppRole | null;
   profile: Database["public"]["Tables"]["profiles"]["Row"] | null;
   loading: boolean;
-  signUp: (email: string, password: string, name: string, role: AppRole) => Promise<void>;
+  signUp: (email: string, password: string, name: string, role: AppRole, city?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, name: string, selectedRole: AppRole) => {
+  const signUp = async (email: string, password: string, name: string, selectedRole: AppRole, city?: string) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -71,14 +71,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     if (error) throw error;
     if (data.user) {
-      // Insert role
       const { error: roleError } = await supabase.from("user_roles").insert({
         user_id: data.user.id,
         role: selectedRole,
       });
       if (roleError) throw roleError;
-      // Update profile name
-      await supabase.from("profiles").update({ name }).eq("user_id", data.user.id);
+      await supabase.from("profiles").update({ name, city: city || null }).eq("user_id", data.user.id);
     }
   };
 

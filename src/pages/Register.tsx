@@ -18,6 +18,7 @@ export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [city, setCity] = useState("");
   const [role, setRole] = useState<AppRole>("citizen");
   const [loading, setLoading] = useState(false);
 
@@ -25,7 +26,7 @@ export default function Register() {
     e.preventDefault();
     setLoading(true);
     try {
-      await signUp(email, password, name, role);
+      await signUp(email, password, name, role, city);
       toast({ title: "Account created!", description: "Please check your email to verify your account." });
       navigate("/login");
     } catch (err: any) {
@@ -65,6 +66,10 @@ export default function Register() {
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} placeholder="••••••••" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="city">City / Address</Label>
+              <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} required placeholder="e.g. Mumbai, Delhi, New York" />
             </div>
             <div className="space-y-2">
               <Label>I am a</Label>

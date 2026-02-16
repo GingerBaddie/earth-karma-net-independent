@@ -13,6 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { CheckCircle, XCircle, CalendarPlus, BarChart3 } from "lucide-react";
 import { PageHeaderDecor, BranchSVG } from "@/components/NatureDecorations";
+import LocationPicker from "@/components/admin/LocationPicker";
 import type { Database } from "@/integrations/supabase/types";
 
 type Activity = Database["public"]["Tables"]["activities"]["Row"];
@@ -26,6 +27,8 @@ export default function Admin() {
   const [events, setEvents] = useState<Event[]>([]);
   const [analytics, setAnalytics] = useState<{ type: string; count: number }[]>([]);
   const [newEvent, setNewEvent] = useState({ title: "", description: "", location: "", event_date: "" });
+  const [eventLat, setEventLat] = useState<number | null>(null);
+  const [eventLng, setEventLng] = useState<number | null>(null);
   const [tab, setTab] = useState("pending");
 
   const fetchData = async () => {
@@ -73,10 +76,12 @@ export default function Admin() {
   const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    const { error } = await supabase.from("events").insert({ ...newEvent, created_by: user.id });
+    const { error } = await supabase.from("events").insert({ ...newEvent, created_by: user.id, latitude: eventLat, longitude: eventLng });
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Event created! 🌿" });
     setNewEvent({ title: "", description: "", location: "", event_date: "" });
+    setEventLat(null);
+    setEventLng(null);
     fetchData();
   };
 
@@ -154,12 +159,20 @@ export default function Admin() {
                   <CardTitle className="flex items-center gap-2 font-display"><CalendarPlus className="h-5 w-5" /> Create Event</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleCreateEvent} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="space-y-2"><Label>Title</Label><Input value={newEvent.title} onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })} required /></div>
-                    <div className="space-y-2"><Label>Location</Label><Input value={newEvent.location} onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })} /></div>
-                    <div className="space-y-2"><Label>Date</Label><Input type="datetime-local" value={newEvent.event_date} onChange={(e) => setNewEvent({ ...newEvent, event_date: e.target.value })} required /></div>
+                  <form onSubmit={handleCreateEvent} className="space-y-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div className="space-y-2"><Label>Title</Label><Input value={newEvent.title} onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })} required /></div>
+                      <div className="space-y-2"><Label>Date</Label><Input type="datetime-local" value={newEvent.event_date} onChange={(e) => setNewEvent({ ...newEvent, event_date: e.target.value })} required /></div>
+                    </div>
                     <div className="space-y-2"><Label>Description</Label><Input value={newEvent.description} onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })} /></div>
-                    <Button type="submit" className="sm:col-span-2 shadow-sm shadow-primary/10">Create Event</Button>
+                    <LocationPicker
+                      location={newEvent.location}
+                      latitude={eventLat}
+                      longitude={eventLng}
+                      onLocationChange={(loc) => setNewEvent({ ...newEvent, location: loc })}
+                      onCoordsChange={(lat, lng) => { setEventLat(lat); setEventLng(lng); }}
+                    />
+                    <Button type="submit" className="shadow-sm shadow-primary/10">Create Event</Button>
                   </form>
                 </CardContent>
               </Card>

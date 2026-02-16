@@ -126,7 +126,9 @@ export type Database = {
           description: string | null
           event_date: string
           id: string
+          latitude: number | null
           location: string | null
+          longitude: number | null
           title: string
         }
         Insert: {
@@ -137,7 +139,9 @@ export type Database = {
           description?: string | null
           event_date: string
           id?: string
+          latitude?: number | null
           location?: string | null
+          longitude?: number | null
           title: string
         }
         Update: {
@@ -148,7 +152,9 @@ export type Database = {
           description?: string | null
           event_date?: string
           id?: string
+          latitude?: number | null
           location?: string | null
+          longitude?: number | null
           title?: string
         }
         Relationships: []
@@ -156,6 +162,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          city: string | null
           created_at: string
           id: string
           name: string
@@ -165,6 +172,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          city?: string | null
           created_at?: string
           id?: string
           name?: string
@@ -174,6 +182,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          city?: string | null
           created_at?: string
           id?: string
           name?: string
