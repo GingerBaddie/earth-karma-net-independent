@@ -1,1 +1,4 @@
 project_id = "rdluarrycasoelqzlxgn"
+
+[functions.verify-activity-image]
+verify_jwt = false

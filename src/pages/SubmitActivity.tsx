@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,13 +7,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { MapPin, Upload, Leaf } from "lucide-react";
+import { MapPin, Upload, Leaf, CheckCircle2, AlertTriangle, Loader2 } from "lucide-react";
 import { PageHeaderDecor, FloatingLeaves, TreeSVG } from "@/components/NatureDecorations";
 import { useReverseGeocode } from "@/hooks/use-reverse-geocode";
 import type { Database } from "@/integrations/supabase/types";
 
 type ActivityType = Database["public"]["Enums"]["activity_type"];
+
+type VerificationResult = {
+  match: boolean;
+  confidence: number;
+  reason: string;
+};
 
 const TYPES: { value: ActivityType; label: string; points: number }[] = [
   { value: "tree_plantation", label: "🌳 Tree Plantation", points: 50 },
@@ -21,6 +29,15 @@ const TYPES: { value: ActivityType; label: string; points: number }[] = [
   { value: "recycling", label: "♻️ Recycling", points: 20 },
   { value: "eco_habit", label: "🌿 Eco-Friendly Habit", points: 5 },
 ];
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 export default function SubmitActivity() {
   const { user } = useAuth();
@@ -34,6 +51,10 @@ export default function SubmitActivity() {
   const [submitting, setSubmitting] = useState(false);
   const { address, loading: addressLoading } = useReverseGeocode(lat, lng);
 
+  const [verifying, setVerifying] = useState(false);
+  const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
+  const verifyAbort = useRef<AbortController | null>(null);
+
   useEffect(() => {
     setLocLoading(true);
     navigator.geolocation.getCurrentPosition(
@@ -41,6 +62,56 @@ export default function SubmitActivity() {
       () => setLocLoading(false)
     );
   }, []);
+
+  // Re-verify when activity type changes and an image is already selected
+  useEffect(() => {
+    if (image) {
+      verifyImage(image, type);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type]);
+
+  async function verifyImage(file: File, activityType: ActivityType) {
+    // Cancel any in-flight verification
+    verifyAbort.current?.abort();
+    const controller = new AbortController();
+    verifyAbort.current = controller;
+
+    setVerifying(true);
+    setVerificationResult(null);
+
+    try {
+      const base64 = await fileToBase64(file);
+
+      const { data, error } = await supabase.functions.invoke("verify-activity-image", {
+        body: { imageBase64: base64, activityType },
+      });
+
+      if (controller.signal.aborted) return;
+
+      if (error) {
+        console.error("Verification error:", error);
+        // Allow submission on error — admin will review
+        setVerificationResult({ match: true, confidence: 0, reason: "Verification unavailable — you can still submit." });
+      } else {
+        setVerificationResult(data as VerificationResult);
+      }
+    } catch (err) {
+      if (controller.signal.aborted) return;
+      console.error("Verification failed:", err);
+      setVerificationResult({ match: true, confidence: 0, reason: "Verification unavailable — you can still submit." });
+    } finally {
+      if (!controller.signal.aborted) setVerifying(false);
+    }
+  }
+
+  function handleImageChange(file: File | null) {
+    setImage(file);
+    setVerificationResult(null);
+    if (file) {
+      verifyImage(file, type);
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,9 +195,45 @@ export default function SubmitActivity() {
                   <label className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed border-border p-6 transition-all hover:border-primary/50 hover:bg-primary/[0.02]">
                     <Upload className="h-8 w-8 text-muted-foreground" />
                     <span className="text-sm text-muted-foreground">{image ? image.name : "Click to upload an image"}</span>
-                    <input type="file" accept="image/*" className="hidden" onChange={(e) => setImage(e.target.files?.[0] ?? null)} />
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageChange(e.target.files?.[0] ?? null)} />
                   </label>
                 </div>
+
+                {/* AI Verification Status */}
+                {verifying && (
+                  <Alert className="border-primary/30 bg-primary/5">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    <AlertDescription className="flex items-center gap-2">
+                      Verifying image with AI...
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {verificationResult && !verifying && (
+                  verificationResult.match ? (
+                    <Alert className="border-green-500/30 bg-green-500/5">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <AlertDescription className="flex items-center gap-2 text-green-700">
+                        {verificationResult.reason}
+                        {verificationResult.confidence > 0 && (
+                          <Badge variant="secondary" className="ml-auto text-xs">
+                            {Math.round(verificationResult.confidence * 100)}% confident
+                          </Badge>
+                        )}
+                      </AlertDescription>
+                    </Alert>
+                  ) : (
+                    <Alert className="border-destructive/30 bg-destructive/5">
+                      <AlertTriangle className="h-4 w-4 text-destructive" />
+                      <AlertDescription className="text-destructive">
+                        <p>{verificationResult.reason}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          You can still submit — an organizer will review it.
+                        </p>
+                      </AlertDescription>
+                    </Alert>
+                  )
+                )}
 
                 <div className="space-y-2">
                   <Label className="flex items-center gap-1"><MapPin className="h-4 w-4" /> Location</Label>
@@ -146,7 +253,7 @@ export default function SubmitActivity() {
                   )}
                 </div>
 
-                <Button type="submit" className="w-full shadow-lg shadow-primary/20" disabled={submitting}>
+                <Button type="submit" className="w-full shadow-lg shadow-primary/20" disabled={submitting || verifying}>
                   {submitting ? "Submitting..." : `Submit ${selected.label}`}
                 </Button>
               </form>
