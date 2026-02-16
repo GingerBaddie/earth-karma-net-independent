@@ -227,9 +227,15 @@ export default function SubmitActivity() {
                       <AlertTriangle className="h-4 w-4 text-destructive" />
                       <AlertDescription className="text-destructive">
                         <p>{verificationResult.reason}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          You can still submit — an organizer will review it.
-                        </p>
+                        {verificationResult.confidence > 0 && verificationResult.confidence < 0.5 ? (
+                          <p className="mt-1 text-xs font-medium">
+                            ⚠️ AI confidence is below 50%. Please upload a different photo that clearly shows the activity.
+                          </p>
+                        ) : (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            You can still submit — an organizer will review it.
+                          </p>
+                        )}
                       </AlertDescription>
                     </Alert>
                   )
@@ -253,7 +259,7 @@ export default function SubmitActivity() {
                   )}
                 </div>
 
-                <Button type="submit" className="w-full shadow-lg shadow-primary/20" disabled={submitting || verifying}>
+                <Button type="submit" className="w-full shadow-lg shadow-primary/20" disabled={submitting || verifying || (verificationResult !== null && verificationResult.confidence > 0 && verificationResult.confidence < 0.5)}>
                   {submitting ? "Submitting..." : `Submit ${selected.label}`}
                 </Button>
               </form>

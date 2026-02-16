@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Users, CalendarDays, Activity, TrendingUp, ArrowRight, CheckCircle2, XCircle } from "lucide-react";
 import { LeafSVG } from "@/components/NatureDecorations";
 import { Link } from "react-router-dom";
@@ -126,14 +128,31 @@ export default function AdminDashboard() {
           ) : (
             <div className="space-y-3">
               {pendingActivities.map((a) => (
-                <div key={a.id} className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-secondary/30">
-                  <div>
-                    <p className="text-sm font-medium">{TYPE_LABELS[a.type]}</p>
-                    <p className="text-xs text-muted-foreground">
-                      by {a.profileName || "Unknown"} · {new Date(a.created_at).toLocaleDateString()}
-                    </p>
+                <div key={a.id} className="flex items-center justify-between gap-3 rounded-lg border p-3 transition-colors hover:bg-secondary/30">
+                  <div className="flex items-center gap-3">
+                    {a.image_url && (
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <button className="flex-shrink-0 overflow-hidden rounded-md border cursor-pointer hover:opacity-80 transition-opacity w-16 h-16">
+                            <AspectRatio ratio={1}>
+                              <img src={a.image_url} alt="Activity evidence" className="h-full w-full object-cover" />
+                            </AspectRatio>
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl">
+                          <DialogTitle className="sr-only">Activity Image Preview</DialogTitle>
+                          <img src={a.image_url} alt="Activity evidence full size" className="w-full rounded-md" />
+                        </DialogContent>
+                      </Dialog>
+                    )}
+                    <div>
+                      <p className="text-sm font-medium">{TYPE_LABELS[a.type]}</p>
+                      <p className="text-xs text-muted-foreground">
+                        by {a.profileName || "Unknown"} · {new Date(a.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <Button size="sm" variant="outline" className="text-destructive hover:bg-destructive/10" onClick={() => handleReject(a.id)}>
                       <XCircle className="mr-1 h-4 w-4" /> Reject
                     </Button>
