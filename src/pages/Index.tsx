@@ -5,6 +5,7 @@ import { Leaf, TreePine, Recycle, Users, ArrowRight, CheckCircle } from "lucide-
 import Navbar from "@/components/Navbar";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import heroImage from "@/assets/hero-nature.jpg";
 
 function AnimatedCounter({ target, label, icon }: { target: number; label: string; icon: React.ReactNode }) {
   const [count, setCount] = useState(0);
@@ -54,25 +55,39 @@ export default function Index() {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      {/* Hero */}
+      {/* Hero with image */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
-        <div className="container relative mx-auto px-4 py-24 text-center lg:py-36">
+        {/* Background image */}
+        <div className="absolute inset-0">
+          <img src={heroImage} alt="Lush green forest landscape" className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/85 via-background/70 to-background" />
+        </div>
+
+        {/* Floating leaf decorations */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <span className="absolute left-[8%] top-[15%] text-4xl opacity-20 animate-float" style={{ animationDelay: "0s" }}>🍃</span>
+          <span className="absolute right-[12%] top-[20%] text-3xl opacity-15 animate-float" style={{ animationDelay: "0.8s" }}>🌿</span>
+          <span className="absolute left-[20%] bottom-[25%] text-5xl opacity-10 animate-float" style={{ animationDelay: "1.5s" }}>🌱</span>
+          <span className="absolute right-[8%] bottom-[30%] text-4xl opacity-15 animate-float" style={{ animationDelay: "2s" }}>🍂</span>
+          <span className="absolute left-[45%] top-[10%] text-3xl opacity-10 animate-float" style={{ animationDelay: "0.5s" }}>🌳</span>
+        </div>
+
+        <div className="container relative mx-auto px-4 py-28 text-center lg:py-40">
           <div className="mx-auto max-w-3xl">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-primary/15 px-4 py-1.5 text-sm font-medium text-primary backdrop-blur-sm">
               <Leaf className="h-4 w-4" /> Community-Powered Environmental Impact
             </div>
-            <h1 className="font-display text-4xl font-extrabold leading-tight tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+            <h1 className="font-display text-4xl font-extrabold leading-tight tracking-tight text-foreground drop-shadow-sm sm:text-5xl lg:text-6xl">
               Track Your <span className="text-primary">Green Impact</span>, One Action at a Time
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
               Join thousands of eco-warriors making a measurable difference. Plant trees, clean up neighborhoods, recycle — and earn rewards for every action.
             </p>
             <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-              <Button asChild size="lg" className="text-base px-8">
+              <Button asChild size="lg" className="text-base px-8 shadow-lg shadow-primary/20">
                 <Link to="/register">Get Started <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="text-base px-8">
+              <Button asChild variant="outline" size="lg" className="text-base px-8 backdrop-blur-sm">
                 <Link to="/leaderboard">View Leaderboard</Link>
               </Button>
             </div>
@@ -90,7 +105,10 @@ export default function Index() {
       </section>
 
       {/* How it works */}
-      <section className="py-20">
+      <section className="relative py-20">
+        {/* Subtle leaf accents */}
+        <div className="pointer-events-none absolute left-0 top-0 text-8xl opacity-[0.03]">🌿</div>
+        <div className="pointer-events-none absolute bottom-0 right-0 text-8xl opacity-[0.03]">🍃</div>
         <div className="container mx-auto px-4">
           <h2 className="text-center font-display text-3xl font-bold text-foreground">How It Works</h2>
           <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">Four simple steps to start making a real environmental impact in your community.</p>
@@ -108,6 +126,17 @@ export default function Index() {
               </Card>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Nature image strip */}
+      <section className="relative h-48 overflow-hidden sm:h-64">
+        <img src={heroImage} alt="Green forest" className="h-full w-full object-cover object-center" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-background/60" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <p className="font-display text-2xl font-bold text-primary-foreground drop-shadow-lg sm:text-3xl">
+            🌍 Every Action Counts
+          </p>
         </div>
       </section>
 

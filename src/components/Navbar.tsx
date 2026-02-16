@@ -1,13 +1,15 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Leaf, LogOut, Menu, X } from "lucide-react";
+import { Leaf, LogOut, Menu, X, Sun, Moon } from "lucide-react";
 import { useState } from "react";
+import { useTheme } from "@/hooks/use-theme";
 
 export default function Navbar() {
   const { user, role, signOut } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const { dark, toggle } = useTheme();
 
   const handleSignOut = async () => {
     await signOut();
@@ -39,8 +41,11 @@ export default function Navbar() {
               {l.label}
             </Link>
           ))}
+          <Button variant="ghost" size="icon" onClick={toggle} className="ml-1" aria-label="Toggle theme">
+            {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </Button>
           {user ? (
-            <Button variant="ghost" size="sm" onClick={handleSignOut} className="ml-2">
+            <Button variant="ghost" size="sm" onClick={handleSignOut} className="ml-1">
               <LogOut className="mr-1 h-4 w-4" /> Sign Out
             </Button>
           ) : (
@@ -52,9 +57,14 @@ export default function Navbar() {
         </div>
 
         {/* Mobile toggle */}
-        <button className="md:hidden" onClick={() => setOpen(!open)}>
-          {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
+        <div className="flex items-center gap-2 md:hidden">
+          <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
+            {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </Button>
+          <button onClick={() => setOpen(!open)}>
+            {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}
