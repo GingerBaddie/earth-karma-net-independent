@@ -39,14 +39,14 @@ const steps = [
 ];
 
 export default function Index() {
-  const [stats, setStats] = useState({ activities: 0, users: 0 });
+  const [stats, setStats] = useState({ activities: 0, users: 0, waste_kg: 0 });
 
   useEffect(() => {
     (async () => {
       const { data, error } = await supabase.rpc("get_landing_stats");
       if (!error && data) {
-        const d = data as { activities: number; users: number };
-        setStats({ activities: d.activities ?? 0, users: d.users ?? 0 });
+        const d = data as { activities: number; users: number; waste_kg: number };
+        setStats({ activities: d.activities ?? 0, users: d.users ?? 0, waste_kg: d.waste_kg ?? 0 });
       }
     })();
   }, []);
@@ -99,7 +99,7 @@ export default function Index() {
       <section className="border-y bg-card py-16">
         <div className="container mx-auto grid grid-cols-1 gap-8 px-4 sm:grid-cols-3">
           <AnimatedCounter target={stats.activities} label="Activities Completed" icon={<TreePine className="h-6 w-6" />} />
-          <AnimatedCounter target={stats.activities * 3} label="kg Waste Collected" icon={<Recycle className="h-6 w-6" />} />
+          <AnimatedCounter target={Math.round(stats.waste_kg)} label="kg Waste Collected" icon={<Recycle className="h-6 w-6" />} />
           <AnimatedCounter target={stats.users} label="Active Eco-Warriors" icon={<Users className="h-6 w-6" />} />
         </div>
       </section>

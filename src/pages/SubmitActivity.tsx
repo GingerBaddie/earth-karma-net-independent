@@ -44,6 +44,7 @@ export default function SubmitActivity() {
   const navigate = useNavigate();
   const [type, setType] = useState<ActivityType>("tree_plantation");
   const [description, setDescription] = useState("");
+  const [wasteKg, setWasteKg] = useState<string>("");
   const [image, setImage] = useState<File | null>(null);
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
@@ -135,7 +136,8 @@ export default function SubmitActivity() {
         image_url,
         latitude: lat,
         longitude: lng,
-      });
+        waste_kg: type === "cleanup" && wasteKg ? parseFloat(wasteKg) : null,
+      } as any);
       if (error) throw error;
 
       toast({ title: "Activity submitted!", description: "Your activity is pending review." });
@@ -189,6 +191,21 @@ export default function SubmitActivity() {
                   <Label htmlFor="desc">Description (optional)</Label>
                   <Input id="desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What did you do?" />
                 </div>
+
+                {type === "cleanup" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="wasteKg">Waste Collected (kg)</Label>
+                    <Input
+                      id="wasteKg"
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      value={wasteKg}
+                      onChange={(e) => setWasteKg(e.target.value)}
+                      placeholder="e.g. 5.5"
+                    />
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label>Photo Evidence</Label>

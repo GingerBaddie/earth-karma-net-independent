@@ -27,6 +27,7 @@ export type Database = {
           status: Database["public"]["Enums"]["activity_status"]
           type: Database["public"]["Enums"]["activity_type"]
           user_id: string
+          waste_kg: number | null
         }
         Insert: {
           created_at?: string
@@ -40,6 +41,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["activity_status"]
           type: Database["public"]["Enums"]["activity_type"]
           user_id: string
+          waste_kg?: number | null
         }
         Update: {
           created_at?: string
@@ -53,6 +55,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["activity_status"]
           type?: Database["public"]["Enums"]["activity_type"]
           user_id?: string
+          waste_kg?: number | null
         }
         Relationships: []
       }
