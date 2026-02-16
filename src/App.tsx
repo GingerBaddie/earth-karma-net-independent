@@ -13,6 +13,7 @@ import SubmitActivity from "./pages/SubmitActivity";
 import Events from "./pages/Events";
 import Leaderboard from "./pages/Leaderboard";
 import Admin from "./pages/Admin";
+import SuperAdmin from "./pages/SuperAdmin";
 import EventDetail from "./pages/EventDetail";
 import NotFound from "./pages/NotFound";
 
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/events/:id" element={<ProtectedRoute><EventDetail /></ProtectedRoute>} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/admin" element={<ProtectedRoute requireRole="organizer"><Admin /></ProtectedRoute>} />
+            <Route path="/super-admin" element={<ProtectedRoute requireRole="admin"><SuperAdmin /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

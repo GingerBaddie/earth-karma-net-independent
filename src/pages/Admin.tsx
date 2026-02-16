@@ -22,7 +22,7 @@ type Event = Database["public"]["Tables"]["events"]["Row"];
 const TYPE_LABELS: Record<string, string> = { tree_plantation: "🌳 Tree Plantation", cleanup: "🧹 Cleanup", recycling: "♻️ Recycling", eco_habit: "🌿 Eco Habit" };
 
 export default function Admin() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const [pending, setPending] = useState<(Activity & { profile_name?: string })[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [analytics, setAnalytics] = useState<{ type: string; count: number }[]>([]);
@@ -42,7 +42,12 @@ export default function Admin() {
       }));
       setPending(enriched);
     }
-    const { data: evts } = await supabase.from("events").select("*").order("event_date", { ascending: false });
+    let evtsQuery = supabase.from("events").select("*").order("event_date", { ascending: false });
+    // Organizers only see their own events; admins see all
+    if (role !== "admin" && user) {
+      evtsQuery = evtsQuery.eq("created_by", user.id);
+    }
+    const { data: evts } = await evtsQuery;
     if (evts) setEvents(evts);
     const { data: allActs } = await supabase.from("activities").select("type, status");
     if (allActs) {
