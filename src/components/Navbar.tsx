@@ -23,6 +23,7 @@ export default function Navbar() {
         { to: "/events", label: "Events" },
         { to: "/leaderboard", label: "Leaderboard" },
         ...(role === "organizer" ? [{ to: "/admin", label: "Admin Panel" }] : []),
+        ...(role === "admin" ? [{ to: "/admin", label: "Admin Panel" }, { to: "/super-admin", label: "Super Admin" }] : []),
       ]
     : [];
 

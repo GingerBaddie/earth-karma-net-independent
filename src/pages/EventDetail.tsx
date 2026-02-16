@@ -162,7 +162,8 @@ export default function EventDetail() {
     );
   }
 
-  const isOrganizer = role === "organizer";
+  const isEventOwner = (role === "organizer" && event.created_by === user?.id) || role === "admin";
+  const isOrganizer = role === "organizer" || role === "admin";
   const qrData = JSON.stringify({ event_id: event.id, code: (event as any).checkin_code });
 
   return (
@@ -229,7 +230,7 @@ export default function EventDetail() {
             {/* QR / Check-in Section */}
             <div className="space-y-6">
               {/* Organizer: Show QR */}
-              {isOrganizer && (
+              {isEventOwner && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 font-display text-lg">
