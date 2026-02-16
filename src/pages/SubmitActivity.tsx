@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { MapPin, Upload, Leaf } from "lucide-react";
 import { PageHeaderDecor, FloatingLeaves, TreeSVG } from "@/components/NatureDecorations";
+import { useReverseGeocode } from "@/hooks/use-reverse-geocode";
 import type { Database } from "@/integrations/supabase/types";
 
 type ActivityType = Database["public"]["Enums"]["activity_type"];
@@ -31,6 +32,7 @@ export default function SubmitActivity() {
   const [lng, setLng] = useState<number | null>(null);
   const [locLoading, setLocLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const { address, loading: addressLoading } = useReverseGeocode(lat, lng);
 
   useEffect(() => {
     setLocLoading(true);
@@ -131,7 +133,14 @@ export default function SubmitActivity() {
                   {locLoading ? (
                     <p className="text-sm text-muted-foreground">Detecting location...</p>
                   ) : lat && lng ? (
-                    <p className="text-sm text-muted-foreground">📍 {lat.toFixed(4)}, {lng.toFixed(4)}</p>
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground">📍 {lat.toFixed(4)}, {lng.toFixed(4)}</p>
+                      {addressLoading ? (
+                        <p className="text-xs text-muted-foreground">Resolving address...</p>
+                      ) : address ? (
+                        <p className="text-xs text-foreground/70">🏠 {address}</p>
+                      ) : null}
+                    </div>
                   ) : (
                     <p className="text-sm text-destructive">Location unavailable. Please allow location access.</p>
                   )}

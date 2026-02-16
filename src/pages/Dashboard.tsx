@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Award, TrendingUp, Leaf, Clock } from "lucide-react";
 import { PageHeaderDecor, FloatingLeaves, VineBorder, LeafSVG } from "@/components/NatureDecorations";
+import CheckinHistory from "@/components/dashboard/CheckinHistory";
 import type { Database } from "@/integrations/supabase/types";
 
 type Activity = Database["public"]["Tables"]["activities"]["Row"];
@@ -173,6 +174,9 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Check-in History */}
+          {user && <CheckinHistory userId={user.id} />}
 
           {/* Recent activities */}
           <Card className="mt-6">
