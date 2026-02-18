@@ -212,6 +212,11 @@ export default function EventDetail() {
 
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary">🏆 {(event as any).attendance_points ?? 25} points for attendance</Badge>
+                    {(event as any).event_type && (
+                      <Badge variant="outline">
+                        {{ tree_plantation: "🌳 Tree Plantation", cleanup: "🧹 Cleanup Drive", recycling: "♻️ Recycling", eco_habit: "🌿 Eco Habit" }[(event as any).event_type] || (event as any).event_type}
+                      </Badge>
+                    )}
                   </div>
 
                   {user && !isOrganizer && (

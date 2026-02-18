@@ -11,10 +11,20 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CheckCircle, XCircle, CalendarPlus, BarChart3 } from "lucide-react";
 import { PageHeaderDecor, BranchSVG } from "@/components/NatureDecorations";
 import LocationPicker from "@/components/admin/LocationPicker";
 import type { Database } from "@/integrations/supabase/types";
+
+type ActivityType = Database["public"]["Enums"]["activity_type"];
+
+const EVENT_TYPE_OPTIONS: { value: ActivityType; label: string; points: number }[] = [
+  { value: "tree_plantation", label: "🌳 Tree Plantation", points: 50 },
+  { value: "cleanup", label: "🧹 Cleanup Drive", points: 30 },
+  { value: "recycling", label: "♻️ Recycling", points: 20 },
+  { value: "eco_habit", label: "🌿 Eco-Friendly Habit Session", points: 5 },
+];
 
 type Activity = Database["public"]["Tables"]["activities"]["Row"];
 type Event = Database["public"]["Tables"]["events"]["Row"];
@@ -26,10 +36,10 @@ export default function Admin() {
   const [pending, setPending] = useState<(Activity & { profile_name?: string })[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [analytics, setAnalytics] = useState<{ type: string; count: number }[]>([]);
-  const [newEvent, setNewEvent] = useState({ title: "", description: "", location: "", event_date: "" });
+  const [newEvent, setNewEvent] = useState({ title: "", description: "", location: "", event_date: "", event_type: "cleanup" as ActivityType });
   const [eventLat, setEventLat] = useState<number | null>(null);
   const [eventLng, setEventLng] = useState<number | null>(null);
-  const [tab, setTab] = useState("pending");
+  const [tab, setTab] = useState(role === "admin" ? "pending" : "events");
 
   const fetchData = async () => {
     const { data: acts } = await supabase.from("activities").select("*").eq("status", "pending").order("created_at", { ascending: false });
@@ -81,10 +91,15 @@ export default function Admin() {
   const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    const { error } = await supabase.from("events").insert({ ...newEvent, created_by: user.id, latitude: eventLat, longitude: eventLng });
+    // Prevent past event creation
+    if (new Date(newEvent.event_date) < new Date()) {
+      toast({ title: "Invalid Date", description: "Events cannot be created in the past.", variant: "destructive" });
+      return;
+    }
+    const { error } = await supabase.from("events").insert({ ...newEvent, created_by: user.id, latitude: eventLat, longitude: eventLng } as any);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Event created! 🌿" });
-    setNewEvent({ title: "", description: "", location: "", event_date: "" });
+    setNewEvent({ title: "", description: "", location: "", event_date: "", event_type: "cleanup" });
     setEventLat(null);
     setEventLng(null);
     fetchData();
@@ -115,7 +130,7 @@ export default function Admin() {
 
           <Tabs value={tab} onValueChange={setTab} className="mt-6">
             <TabsList>
-              <TabsTrigger value="pending">Pending ({pending.length})</TabsTrigger>
+              {role === "admin" && <TabsTrigger value="pending">Pending ({pending.length})</TabsTrigger>}
               <TabsTrigger value="events">Events</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
             </TabsList>
@@ -167,7 +182,18 @@ export default function Admin() {
                   <form onSubmit={handleCreateEvent} className="space-y-4">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div className="space-y-2"><Label>Title</Label><Input value={newEvent.title} onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })} required /></div>
-                      <div className="space-y-2"><Label>Date</Label><Input type="datetime-local" value={newEvent.event_date} onChange={(e) => setNewEvent({ ...newEvent, event_date: e.target.value })} required /></div>
+                      <div className="space-y-2"><Label>Date</Label><Input type="datetime-local" value={newEvent.event_date} onChange={(e) => setNewEvent({ ...newEvent, event_date: e.target.value })} min={new Date().toISOString().slice(0, 16)} required /></div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Event Type</Label>
+                      <Select value={newEvent.event_type} onValueChange={(v) => setNewEvent({ ...newEvent, event_type: v as ActivityType })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {EVENT_TYPE_OPTIONS.map((t) => (
+                            <SelectItem key={t.value} value={t.value}>{t.label} (+{t.points} pts)</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2"><Label>Description</Label><Input value={newEvent.description} onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })} /></div>
                     <LocationPicker

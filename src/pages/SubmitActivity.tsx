@@ -164,7 +164,7 @@ export default function SubmitActivity() {
             <CardHeader className="relative">
               <div className="absolute -right-6 -top-6 text-7xl opacity-[0.04]">🌳</div>
               <CardTitle className="font-display text-2xl flex items-center gap-2"><Leaf className="h-6 w-6 text-primary" /> Submit Activity</CardTitle>
-              <CardDescription>Record your environmental contribution. An organizer will verify it.</CardDescription>
+              <CardDescription>Record your environmental contribution. A super admin will verify it.</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">

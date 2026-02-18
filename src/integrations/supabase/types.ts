@@ -128,6 +128,7 @@ export type Database = {
           created_by: string
           description: string | null
           event_date: string
+          event_type: Database["public"]["Enums"]["activity_type"]
           id: string
           latitude: number | null
           location: string | null
@@ -141,6 +142,7 @@ export type Database = {
           created_by: string
           description?: string | null
           event_date: string
+          event_type?: Database["public"]["Enums"]["activity_type"]
           id?: string
           latitude?: number | null
           location?: string | null
@@ -154,6 +156,7 @@ export type Database = {
           created_by?: string
           description?: string | null
           event_date?: string
+          event_type?: Database["public"]["Enums"]["activity_type"]
           id?: string
           latitude?: number | null
           location?: string | null

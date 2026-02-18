@@ -50,9 +50,11 @@ export default function Events() {
   };
 
   const userCity = profile?.city?.toLowerCase().trim();
+  const now = new Date();
+  const upcomingEvents = events.filter((e) => new Date(e.event_date) >= now);
   const filteredEvents = filterByCity && userCity
-    ? events.filter((e) => e.location?.toLowerCase().includes(userCity))
-    : events;
+    ? upcomingEvents.filter((e) => e.location?.toLowerCase().includes(userCity))
+    : upcomingEvents;
 
   return (
     <div className="min-h-screen bg-background">
@@ -108,6 +110,11 @@ export default function Events() {
                         <div className="flex items-center gap-1"><CalendarDays className="h-4 w-4" /> {new Date(e.event_date).toLocaleDateString(undefined, { weekday: "short", year: "numeric", month: "short", day: "numeric" })}</div>
                         {e.location && <div className="flex items-center gap-1"><MapPin className="h-4 w-4" /> {e.location}</div>}
                         <div className="flex items-center gap-1"><Users className="h-4 w-4" /> {e.participant_count} participant{e.participant_count !== 1 ? "s" : ""}</div>
+                        {(e as any).event_type && (
+                          <Badge variant="outline" className="text-xs">
+                            {{ tree_plantation: "🌳 Tree Plantation", cleanup: "🧹 Cleanup", recycling: "♻️ Recycling", eco_habit: "🌿 Eco Habit" }[(e as any).event_type]}
+                          </Badge>
+                        )}
                       </div>
                       <span className="text-xs font-medium text-primary">View Details →</span>
                     </CardContent>
