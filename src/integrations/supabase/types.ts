@@ -89,6 +89,13 @@ export type Database = {
             referencedRelation: "events"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "event_checkins_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       event_participants: {
@@ -116,6 +123,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_participants_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events_public"
             referencedColumns: ["id"]
           },
         ]
@@ -274,7 +288,48 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      events_public: {
+        Row: {
+          attendance_points: number | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          event_date: string | null
+          event_type: Database["public"]["Enums"]["activity_type"] | null
+          id: string | null
+          latitude: number | null
+          location: string | null
+          longitude: number | null
+          title: string | null
+        }
+        Insert: {
+          attendance_points?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          event_date?: string | null
+          event_type?: Database["public"]["Enums"]["activity_type"] | null
+          id?: string | null
+          latitude?: number | null
+          location?: string | null
+          longitude?: number | null
+          title?: string | null
+        }
+        Update: {
+          attendance_points?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          event_date?: string | null
+          event_type?: Database["public"]["Enums"]["activity_type"] | null
+          id?: string | null
+          latitude?: number | null
+          location?: string | null
+          longitude?: number | null
+          title?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       approve_activity: { Args: { activity_id: string }; Returns: undefined }

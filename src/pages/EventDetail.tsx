@@ -18,7 +18,7 @@ type Event = Database["public"]["Tables"]["events"]["Row"];
 export default function EventDetail() {
   const { id } = useParams<{ id: string }>();
   const { user, role } = useAuth();
-  const [event, setEvent] = useState<(Event & { checkin_code?: string; attendance_points?: number }) | null>(null);
+  const [event, setEvent] = useState<(Event & { checkin_code?: string }) | null>(null);
   const [participantCount, setParticipantCount] = useState(0);
   const [joined, setJoined] = useState(false);
   const [checkedIn, setCheckedIn] = useState(false);
@@ -30,8 +30,18 @@ export default function EventDetail() {
 
   const fetchEvent = useCallback(async () => {
     if (!id) return;
-    const { data } = await supabase.from("events").select("*").eq("id", id).maybeSingle();
-    if (data) setEvent(data as Event & { checkin_code?: string; attendance_points?: number });
+    // Use the public view (no checkin_code) for general event data
+    const { data } = await supabase.from("events_public" as any).select("*").eq("id", id).maybeSingle() as { data: Event | null };
+    if (data) {
+      // If user is the event owner or admin, fetch checkin_code from the base table
+      const isOwner = (role === "organizer" && data.created_by === user?.id) || role === "admin";
+      let checkinCode: string | undefined;
+      if (isOwner) {
+        const { data: fullEvent } = await supabase.from("events").select("checkin_code").eq("id", id).maybeSingle();
+        checkinCode = fullEvent?.checkin_code ?? undefined;
+      }
+      setEvent({ ...data, checkin_code: checkinCode });
+    }
 
     const { data: participants } = await supabase
       .from("event_participants")
@@ -164,7 +174,7 @@ export default function EventDetail() {
 
   const isEventOwner = (role === "organizer" && event.created_by === user?.id) || role === "admin";
   const isOrganizer = role === "organizer" || role === "admin";
-  const qrData = JSON.stringify({ event_id: event.id, code: (event as any).checkin_code });
+  const qrData = JSON.stringify({ event_id: event.id, code: event.checkin_code });
 
   return (
     <div className="min-h-screen bg-background">

@@ -20,7 +20,7 @@ export default function Events() {
   const [filterByCity, setFilterByCity] = useState(true);
 
   const fetchEvents = async () => {
-    const { data: eventsData } = await supabase.from("events").select("*").order("event_date", { ascending: true });
+    const { data: eventsData } = await supabase.from("events_public" as any).select("*").order("event_date", { ascending: true }) as { data: Event[] | null };
     if (!eventsData) { setLoading(false); return; }
     const { data: participants } = await supabase.from("event_participants").select("event_id, user_id");
     const enriched = eventsData.map((e) => {
