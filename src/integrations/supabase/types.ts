@@ -167,6 +167,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_status: Database["public"]["Enums"]["account_status"]
           avatar_url: string | null
           city: string | null
           created_at: string
@@ -177,6 +178,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          account_status?: Database["public"]["Enums"]["account_status"]
           avatar_url?: string | null
           city?: string | null
           created_at?: string
@@ -187,6 +189,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          account_status?: Database["public"]["Enums"]["account_status"]
           avatar_url?: string | null
           city?: string | null
           created_at?: string
@@ -289,6 +292,7 @@ export type Database = {
       }
     }
     Enums: {
+      account_status: "active" | "suspended" | "banned"
       activity_status: "pending" | "approved" | "rejected"
       activity_type: "tree_plantation" | "cleanup" | "recycling" | "eco_habit"
       app_role: "citizen" | "organizer" | "admin"
@@ -419,6 +423,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_status: ["active", "suspended", "banned"],
       activity_status: ["pending", "approved", "rejected"],
       activity_type: ["tree_plantation", "cleanup", "recycling", "eco_habit"],
       app_role: ["citizen", "organizer", "admin"],

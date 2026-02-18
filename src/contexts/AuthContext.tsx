@@ -31,7 +31,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
     ]);
-    if (profileRes.data) setProfile(profileRes.data);
+    if (profileRes.data) {
+      const accountStatus = (profileRes.data as any).account_status;
+      if (accountStatus === "suspended" || accountStatus === "banned") {
+        await supabase.auth.signOut();
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        setRole(null);
+        return;
+      }
+      setProfile(profileRes.data);
+    }
     if (roleRes.data) setRole(roleRes.data.role);
   };
 

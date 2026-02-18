@@ -8,13 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { Users, CalendarDays, Activity, BarChart3, Search, Trash2, Shield } from "lucide-react";
+import { Users, CalendarDays, Activity, BarChart3, Search, Trash2, Shield, Ban, ShieldAlert, ShieldCheck } from "lucide-react";
 import { PageHeaderDecor } from "@/components/NatureDecorations";
 import type { Database } from "@/integrations/supabase/types";
-
-type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+type Profile = Database["public"]["Tables"]["profiles"]["Row"] & { account_status?: string };
 type Event = Database["public"]["Tables"]["events"]["Row"];
 type ActivityRow = Database["public"]["Tables"]["activities"]["Row"];
 
@@ -116,6 +117,31 @@ export default function SuperAdmin() {
     fetchAll();
   };
 
+  const [statusDialog, setStatusDialog] = useState<{ open: boolean; userId: string; name: string; currentStatus: string }>({
+    open: false, userId: "", name: "", currentStatus: "active",
+  });
+  const [newStatus, setNewStatus] = useState<string>("active");
+  const [statusLoading, setStatusLoading] = useState(false);
+
+  const handleChangeStatus = async () => {
+    setStatusLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke("manage-user-status", {
+        body: { user_id: statusDialog.userId, status: newStatus },
+      });
+      if (res.error) throw new Error(res.error.message);
+      if (res.data?.error) throw new Error(res.data.error);
+      toast({ title: `User ${newStatus === "banned" ? "banned" : newStatus === "suspended" ? "suspended" : "reactivated"} successfully` });
+      setStatusDialog({ open: false, userId: "", name: "", currentStatus: "active" });
+      fetchAll();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setStatusLoading(false);
+    }
+  };
+
   const filteredProfiles = profiles.filter(
     (p) => p.name.toLowerCase().includes(search.toLowerCase()) || p.city?.toLowerCase().includes(search.toLowerCase()) || p.role?.toLowerCase().includes(search.toLowerCase())
   );
@@ -213,26 +239,56 @@ export default function SuperAdmin() {
                         <TableHead>Name</TableHead>
                         <TableHead>City</TableHead>
                         <TableHead>Role</TableHead>
+                        <TableHead>Status</TableHead>
                         <TableHead>Points</TableHead>
                         <TableHead>Joined</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredProfiles.map((p) => (
-                        <TableRow key={p.id}>
-                          <TableCell className="font-medium">{p.name || "—"}</TableCell>
-                          <TableCell>{p.city || "—"}</TableCell>
-                          <TableCell>
-                            <Badge variant={p.role === "admin" ? "default" : p.role === "organizer" ? "secondary" : "outline"}>
-                              {p.role}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{p.points}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</TableCell>
-                        </TableRow>
-                      ))}
+                      {filteredProfiles.map((p) => {
+                        const accStatus = (p as any).account_status || "active";
+                        return (
+                          <TableRow key={p.id} className={accStatus === "banned" ? "opacity-50" : ""}>
+                            <TableCell className="font-medium">{p.name || "—"}</TableCell>
+                            <TableCell>{p.city || "—"}</TableCell>
+                            <TableCell>
+                              <Badge variant={p.role === "admin" ? "default" : p.role === "organizer" ? "secondary" : "outline"}>
+                                {p.role}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={accStatus === "active" ? "outline" : "destructive"} className={
+                                accStatus === "active" ? "border-green-500 text-green-700" :
+                                accStatus === "suspended" ? "bg-yellow-500/10 text-yellow-700 border-yellow-500" : ""
+                              }>
+                                {accStatus === "active" && <ShieldCheck className="mr-1 h-3 w-3" />}
+                                {accStatus === "suspended" && <ShieldAlert className="mr-1 h-3 w-3" />}
+                                {accStatus === "banned" && <Ban className="mr-1 h-3 w-3" />}
+                                {accStatus}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{p.points}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</TableCell>
+                            <TableCell>
+                              {p.role !== "admin" && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    setStatusDialog({ open: true, userId: p.user_id, name: p.name, currentStatus: accStatus });
+                                    setNewStatus(accStatus);
+                                  }}
+                                >
+                                  <Shield className="h-3 w-3 mr-1" /> Manage
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                       {filteredProfiles.length === 0 && (
-                        <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No users found</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No users found</TableCell></TableRow>
                       )}
                     </TableBody>
                   </Table>
@@ -356,6 +412,55 @@ export default function SuperAdmin() {
               </div>
             </TabsContent>
           </Tabs>
+
+          {/* User Status Management Dialog */}
+          <Dialog open={statusDialog.open} onOpenChange={(open) => setStatusDialog((s) => ({ ...s, open }))}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Manage Account: {statusDialog.name}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <p className="text-sm text-muted-foreground">
+                  Current status: <Badge variant="outline">{statusDialog.currentStatus}</Badge>
+                </p>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Change status to:</label>
+                  <Select value={newStatus} onValueChange={setNewStatus}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">
+                        <span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-green-600" /> Active</span>
+                      </SelectItem>
+                      <SelectItem value="suspended">
+                        <span className="flex items-center gap-2"><ShieldAlert className="h-4 w-4 text-yellow-600" /> Suspended (30 days)</span>
+                      </SelectItem>
+                      <SelectItem value="banned">
+                        <span className="flex items-center gap-2"><Ban className="h-4 w-4 text-destructive" /> Banned (permanent)</span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {newStatus === "banned" && (
+                  <p className="text-sm text-destructive">⚠️ This will permanently block the user from logging in.</p>
+                )}
+                {newStatus === "suspended" && (
+                  <p className="text-sm text-yellow-600">⏳ The user will be unable to log in for 30 days.</p>
+                )}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setStatusDialog((s) => ({ ...s, open: false }))}>Cancel</Button>
+                <Button
+                  variant={newStatus === "banned" ? "destructive" : "default"}
+                  onClick={handleChangeStatus}
+                  disabled={statusLoading || newStatus === statusDialog.currentStatus}
+                >
+                  {statusLoading ? "Updating..." : "Confirm"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>

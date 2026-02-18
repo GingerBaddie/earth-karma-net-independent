@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.seed-admin]
 verify_jwt = false
+
+[functions.manage-user-status]
+verify_jwt = false
