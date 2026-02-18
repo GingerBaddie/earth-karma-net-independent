@@ -16,8 +16,12 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const email = "admin@ecotrack.com";
-    const password = "Admin123!";
+    const email = Deno.env.get("ADMIN_EMAIL");
+    const password = Deno.env.get("ADMIN_PASSWORD");
+
+    if (!email || !password) {
+      throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD secrets must be configured");
+    }
 
     // Check if user already exists
     const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
