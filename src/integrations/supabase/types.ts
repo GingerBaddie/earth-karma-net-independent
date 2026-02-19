@@ -59,6 +59,39 @@ export type Database = {
         }
         Relationships: []
       }
+      badges: {
+        Row: {
+          category: Database["public"]["Enums"]["badge_category"]
+          created_at: string
+          criteria_type: string
+          criteria_value: number
+          description: string
+          icon: string
+          id: string
+          name: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["badge_category"]
+          created_at?: string
+          criteria_type: string
+          criteria_value: number
+          description?: string
+          icon?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["badge_category"]
+          created_at?: string
+          criteria_type?: string
+          criteria_value?: number
+          description?: string
+          icon?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       event_checkins: {
         Row: {
           checked_in_at: string
@@ -179,6 +212,60 @@ export type Database = {
         }
         Relationships: []
       }
+      organizer_applications: {
+        Row: {
+          admin_remarks: string | null
+          contact_number: string
+          created_at: string
+          id: string
+          official_email: string
+          organization_name: string
+          organizer_type: Database["public"]["Enums"]["organizer_type"]
+          proof_type: string | null
+          proof_url: string | null
+          purpose: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["application_status"]
+          user_id: string
+          website_url: string | null
+        }
+        Insert: {
+          admin_remarks?: string | null
+          contact_number: string
+          created_at?: string
+          id?: string
+          official_email: string
+          organization_name: string
+          organizer_type: Database["public"]["Enums"]["organizer_type"]
+          proof_type?: string | null
+          proof_url?: string | null
+          purpose: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["application_status"]
+          user_id: string
+          website_url?: string | null
+        }
+        Update: {
+          admin_remarks?: string | null
+          contact_number?: string
+          created_at?: string
+          id?: string
+          official_email?: string
+          organization_name?: string
+          organizer_type?: Database["public"]["Enums"]["organizer_type"]
+          proof_type?: string | null
+          proof_url?: string | null
+          purpose?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["application_status"]
+          user_id?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           account_status: Database["public"]["Enums"]["account_status"]
@@ -239,6 +326,35 @@ export type Database = {
         }
         Relationships: []
       }
+      user_badges: {
+        Row: {
+          badge_id: string
+          id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          id?: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_rewards: {
         Row: {
           id: string
@@ -282,6 +398,30 @@ export type Database = {
         Update: {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_streaks: {
+        Row: {
+          current_streak: number
+          id: string
+          last_activity_date: string | null
+          longest_streak: number
+          user_id: string
+        }
+        Insert: {
+          current_streak?: number
+          id?: string
+          last_activity_date?: string | null
+          longest_streak?: number
+          user_id: string
+        }
+        Update: {
+          current_streak?: number
+          id?: string
+          last_activity_date?: string | null
+          longest_streak?: number
           user_id?: string
         }
         Relationships: []
@@ -333,6 +473,14 @@ export type Database = {
     }
     Functions: {
       approve_activity: { Args: { activity_id: string }; Returns: undefined }
+      approve_organizer_application: {
+        Args: { p_application_id: string; p_remarks?: string }
+        Returns: undefined
+      }
+      check_and_award_badges: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
       checkin_event: {
         Args: { p_code: string; p_event_id: string }
         Returns: undefined
@@ -345,12 +493,23 @@ export type Database = {
         }
         Returns: boolean
       }
+      reject_organizer_application: {
+        Args: { p_application_id: string; p_remarks?: string }
+        Returns: undefined
+      }
     }
     Enums: {
       account_status: "active" | "suspended" | "banned"
       activity_status: "pending" | "approved" | "rejected"
       activity_type: "tree_plantation" | "cleanup" | "recycling" | "eco_habit"
       app_role: "citizen" | "organizer" | "admin"
+      application_status: "pending" | "approved" | "rejected"
+      badge_category: "milestone" | "streak" | "community_impact"
+      organizer_type:
+        | "ngo"
+        | "college_school"
+        | "company_csr"
+        | "community_group"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -482,6 +641,14 @@ export const Constants = {
       activity_status: ["pending", "approved", "rejected"],
       activity_type: ["tree_plantation", "cleanup", "recycling", "eco_habit"],
       app_role: ["citizen", "organizer", "admin"],
+      application_status: ["pending", "approved", "rejected"],
+      badge_category: ["milestone", "streak", "community_impact"],
+      organizer_type: [
+        "ngo",
+        "college_school",
+        "company_csr",
+        "community_group",
+      ],
     },
   },
 } as const

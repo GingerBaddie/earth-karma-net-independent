@@ -1,13 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { Award, TrendingUp, Leaf, Clock } from "lucide-react";
+import { Award, TrendingUp, Leaf, Clock, Flame, Shield } from "lucide-react";
 import { LeafSVG } from "@/components/NatureDecorations";
 import CheckinHistory from "@/components/dashboard/CheckinHistory";
+import BadgeShowcase from "@/components/badges/BadgeShowcase";
+import BadgeUnlockAnimation from "@/components/badges/BadgeUnlockAnimation";
+import { Link } from "react-router-dom";
 import type { Database } from "@/integrations/supabase/types";
 
 type Activity = Database["public"]["Tables"]["activities"]["Row"];
@@ -18,30 +22,82 @@ const TYPE_LABELS: Record<string, string> = { tree_plantation: "🌳 Tree Planta
 const PIE_COLORS = ["hsl(152,55%,33%)", "hsl(85,45%,50%)", "hsl(200,60%,55%)", "hsl(45,90%,55%)"];
 
 export default function VolunteerDashboard() {
-  const { profile, user } = useAuth();
+  const { profile, user, role } = useAuth();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [unlockedIds, setUnlockedIds] = useState<string[]>([]);
 
+  // Badge state
+  const [allBadges, setAllBadges] = useState<any[]>([]);
+  const [userBadgeIds, setUserBadgeIds] = useState<string[]>([]);
+  const [newBadgeIds, setNewBadgeIds] = useState<string[]>([]);
+  const [streak, setStreak] = useState(0);
+  const [unlockAnim, setUnlockAnim] = useState<{ icon: string; name: string } | null>(null);
+
+  // Organizer application status
+  const [appStatus, setAppStatus] = useState<string | null>(null);
+
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const [actRes, rewRes, urRes] = await Promise.all([
+      const [actRes, rewRes, urRes, badgeRes, ubRes, streakRes] = await Promise.all([
         supabase.from("activities").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20),
         supabase.from("rewards").select("*").order("points_required"),
         supabase.from("user_rewards").select("reward_id").eq("user_id", user.id),
+        supabase.from("badges" as any).select("*"),
+        supabase.from("user_badges" as any).select("badge_id").eq("user_id", user.id),
+        supabase.from("user_streaks" as any).select("current_streak").eq("user_id", user.id).maybeSingle(),
       ]);
       if (actRes.data) setActivities(actRes.data);
       if (rewRes.data) setRewards(rewRes.data);
       if (urRes.data) setUnlockedIds(urRes.data.map((r) => r.reward_id));
+      if (badgeRes.data) setAllBadges(badgeRes.data);
+      if (streakRes.data) setStreak((streakRes.data as any).current_streak || 0);
+
+      const earnedIds = (ubRes.data || []).map((b: any) => b.badge_id);
+      setUserBadgeIds(earnedIds);
+
+      // Check for new badges
+      const seenKey = `seen_badges_${user.id}`;
+      const seen = JSON.parse(localStorage.getItem(seenKey) || "[]");
+      const newOnes = earnedIds.filter((id: string) => !seen.includes(id));
+      setNewBadgeIds(newOnes);
+
+      if (newOnes.length > 0 && badgeRes.data) {
+        const firstNew = (badgeRes.data as any[]).find((b: any) => b.id === newOnes[0]);
+        if (firstNew) setUnlockAnim({ icon: firstNew.icon, name: firstNew.name });
+        localStorage.setItem(seenKey, JSON.stringify(earnedIds));
+      }
+
+      // Check organizer application
+      if (role === "citizen") {
+        const { data: app } = await supabase
+          .from("organizer_applications" as any)
+          .select("status")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (app) setAppStatus((app as any).status);
+      }
     })();
-  }, [user]);
+  }, [user, role]);
 
   const points = profile?.points ?? 0;
   const nextReward = rewards.find((r) => r.points_required > points);
   const progress = nextReward ? Math.min((points / nextReward.points_required) * 100, 100) : 100;
 
-  const monthlyData = activities.filter((a) => a.status === "approved").reduce((acc, a) => {
+  // Compute badge progress stats
+  const approvedActivities = activities.filter((a) => a.status === "approved");
+  const userStats = {
+    total_activities: approvedActivities.length,
+    tree_plantation_count: approvedActivities.filter((a) => a.type === "tree_plantation").length,
+    cleanup_count: approvedActivities.filter((a) => a.type === "cleanup").length,
+    recycling_count: approvedActivities.filter((a) => a.type === "recycling").length,
+    eco_habit_count: approvedActivities.filter((a) => a.type === "eco_habit").length,
+    waste_kg: approvedActivities.reduce((sum, a) => sum + (a.waste_kg || 0), 0),
+    streak_days: streak,
+  };
+
+  const monthlyData = approvedActivities.reduce((acc, a) => {
     const month = new Date(a.created_at).toLocaleString("default", { month: "short" });
     const existing = acc.find((d) => d.month === month);
     if (existing) existing.count++;
@@ -49,7 +105,7 @@ export default function VolunteerDashboard() {
     return acc;
   }, [] as { month: string; count: number }[]);
 
-  const typeData = activities.filter((a) => a.status === "approved").reduce((acc, a) => {
+  const typeData = approvedActivities.reduce((acc, a) => {
     const existing = acc.find((d) => d.name === TYPE_LABELS[a.type]);
     if (existing) existing.value++;
     else acc.push({ name: TYPE_LABELS[a.type], value: 1 });
@@ -58,6 +114,14 @@ export default function VolunteerDashboard() {
 
   return (
     <>
+      {unlockAnim && (
+        <BadgeUnlockAnimation
+          icon={unlockAnim.icon}
+          name={unlockAnim.name}
+          onDismiss={() => setUnlockAnim(null)}
+        />
+      )}
+
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
           <Leaf className="h-5 w-5 text-primary" />
@@ -94,8 +158,8 @@ export default function VolunteerDashboard() {
         <Card className="group overflow-hidden transition-shadow hover:shadow-md hover:shadow-eco-sky/5">
           <CardContent className="relative flex items-center gap-4 p-5">
             <LeafSVG className="absolute -right-4 -top-4 h-20 w-20 -rotate-12 text-eco-sky opacity-50 transition-opacity group-hover:opacity-100" />
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-eco-sky/10 text-eco-sky"><Clock className="h-6 w-6" /></div>
-            <div><p className="text-sm text-muted-foreground">Pending</p><p className="font-display text-2xl font-bold">{activities.filter((a) => a.status === "pending").length}</p></div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-eco-sky/10 text-eco-sky"><Flame className="h-6 w-6" /></div>
+            <div><p className="text-sm text-muted-foreground">Streak</p><p className="font-display text-2xl font-bold">{streak} days</p></div>
           </CardContent>
         </Card>
       </div>
@@ -109,6 +173,43 @@ export default function VolunteerDashboard() {
               <span className="text-muted-foreground">{points}/{nextReward.points_required} pts</span>
             </div>
             <Progress value={progress} className="mt-2 h-3" />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Badges & Achievements */}
+      <div className="mt-6">
+        <h2 className="font-display text-lg font-bold mb-3 flex items-center gap-2">🏅 Badges & Achievements</h2>
+        <BadgeShowcase
+          badges={allBadges}
+          unlockedBadgeIds={userBadgeIds}
+          userStats={userStats}
+          newBadgeIds={newBadgeIds}
+        />
+      </div>
+
+      {/* Apply as Organizer */}
+      {role === "citizen" && (
+        <Card className="mt-6 border-primary/20">
+          <CardContent className="flex items-center justify-between p-5">
+            <div className="flex items-center gap-3">
+              <Shield className="h-8 w-8 text-primary" />
+              <div>
+                <p className="font-semibold">Want to organize events?</p>
+                <p className="text-sm text-muted-foreground">
+                  {appStatus === "pending" ? "Your application is under review ⏳" :
+                   appStatus === "rejected" ? "Your application was not approved" :
+                   "Apply to become an organizer and create eco events!"}
+                </p>
+              </div>
+            </div>
+            {!appStatus && (
+              <Button asChild>
+                <Link to="/apply-organizer">Apply Now</Link>
+              </Button>
+            )}
+            {appStatus === "pending" && <Badge variant="outline" className="border-yellow-500 text-yellow-700">Pending</Badge>}
+            {appStatus === "rejected" && <Badge variant="destructive">Rejected</Badge>}
           </CardContent>
         </Card>
       )}

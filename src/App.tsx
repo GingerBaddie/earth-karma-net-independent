@@ -16,6 +16,7 @@ import Admin from "./pages/Admin";
 import SuperAdmin from "./pages/SuperAdmin";
 import EventDetail from "./pages/EventDetail";
 import NotFound from "./pages/NotFound";
+import ApplyOrganizer from "./pages/ApplyOrganizer";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
             <Route path="/events/:id" element={<ProtectedRoute><EventDetail /></ProtectedRoute>} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/apply-organizer" element={<ProtectedRoute><ApplyOrganizer /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute requireRole="organizer"><Admin /></ProtectedRoute>} />
             <Route path="/super-admin" element={<ProtectedRoute requireRole="admin"><SuperAdmin /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />

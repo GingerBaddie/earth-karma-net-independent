@@ -19,7 +19,6 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [city, setCity] = useState("");
-  const [role, setRole] = useState<AppRole>("citizen");
   const [loading, setLoading] = useState(false);
 
   const validatePassword = (pw: string): string | null => {
@@ -40,7 +39,7 @@ export default function Register() {
     }
     setLoading(true);
     try {
-      await signUp(email, password, name, role, city);
+      await signUp(email, password, name, "citizen", city);
       toast({ title: "Account created!", description: "Please check your email to verify your account." });
       navigate("/login");
     } catch (err: any) {
@@ -86,23 +85,7 @@ export default function Register() {
               <Label htmlFor="city">City / Address</Label>
               <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} required placeholder="e.g. Mumbai, Delhi, New York" />
             </div>
-            <div className="space-y-2">
-              <Label>I am a</Label>
-              <div className="grid grid-cols-2 gap-3">
-                {(["citizen", "organizer"] as AppRole[]).map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => setRole(r)}
-                    className={`rounded-lg border-2 p-3 text-center text-sm font-medium transition-all hover:scale-[1.02] ${
-                      role === r ? "border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10" : "border-border hover:border-primary/50"
-                    }`}
-                  >
-                    {r === "citizen" ? "🌱 Citizen" : "🛡️ Organizer"}
-                  </button>
-                ))}
-              </div>
-            </div>
+            
             <Button type="submit" className="w-full shadow-lg shadow-primary/20" disabled={loading}>
               {loading ? "Creating account..." : "Create Account"}
             </Button>
