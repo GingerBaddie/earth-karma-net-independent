@@ -96,6 +96,11 @@ export default function Admin() {
       toast({ title: "Invalid Date", description: "Events cannot be created in the past.", variant: "destructive" });
       return;
     }
+    // Require location
+    if (!newEvent.location.trim()) {
+      toast({ title: "Location Required", description: "Please provide a location for the event.", variant: "destructive" });
+      return;
+    }
     const { error } = await supabase.from("events").insert({ ...newEvent, created_by: user.id, latitude: eventLat, longitude: eventLng } as any);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Event created! 🌿" });
