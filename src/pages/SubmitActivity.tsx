@@ -276,7 +276,7 @@ export default function SubmitActivity() {
                   }
                 </div>
 
-                <Button type="submit" className="w-full shadow-lg shadow-primary/20" disabled={submitting || verifying || verificationResult !== null && verificationResult.confidence > 0 && verificationResult.confidence < 0.5}>
+                <Button type="submit" className="w-full shadow-lg shadow-primary/20" disabled={submitting || verifying || !image || verificationResult !== null && verificationResult.confidence > 0 && verificationResult.confidence < 0.5}>
                   {submitting ? "Submitting..." : `Submit ${selected.label}`}
                 </Button>
               </form>
