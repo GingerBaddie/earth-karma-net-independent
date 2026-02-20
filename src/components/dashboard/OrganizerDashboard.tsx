@@ -4,10 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Users, Plus, ArrowRight } from "lucide-react";
+import { CalendarDays, Users, Plus, ArrowRight, Award } from "lucide-react";
 import { LeafSVG } from "@/components/NatureDecorations";
 import { Link } from "react-router-dom";
-import { toast } from "sonner";
+import CertificateDialog from "@/components/dashboard/CertificateDialog";
 import type { Database } from "@/integrations/supabase/types";
 
 type Event = Database["public"]["Tables"]["events"]["Row"];
@@ -24,16 +24,19 @@ export default function OrganizerDashboard() {
   const { profile, user } = useAuth();
   const [myEvents, setMyEvents] = useState<Event[]>([]);
   const [totalParticipants, setTotalParticipants] = useState(0);
+  const [approvedActivities, setApprovedActivities] = useState<ActivityRow[]>([]);
 
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const [eventsRes, participantsRes] = await Promise.all([
+      const [eventsRes, participantsRes, activitiesRes] = await Promise.all([
         supabase.from("events").select("*").eq("created_by", user.id).order("event_date", { ascending: false }),
         supabase.from("event_participants").select("event_id, events!inner(created_by)").eq("events.created_by", user.id),
+        supabase.from("activities").select("*").eq("user_id", user.id).eq("status", "approved").order("created_at", { ascending: false }),
       ]);
       setMyEvents(eventsRes.data || []);
       setTotalParticipants(participantsRes.data?.length || 0);
+      setApprovedActivities(activitiesRes.data || []);
     })();
   }, [user]);
 
@@ -53,7 +56,7 @@ export default function OrganizerDashboard() {
       </div>
 
       {/* Stats */}
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="group overflow-hidden transition-shadow hover:shadow-md hover:shadow-primary/5">
           <CardContent className="relative flex items-center gap-4 p-5">
             <LeafSVG className="absolute -right-4 -top-4 h-20 w-20 rotate-45 text-primary opacity-50 transition-opacity group-hover:opacity-100" />
@@ -68,7 +71,46 @@ export default function OrganizerDashboard() {
             <div><p className="text-sm text-muted-foreground">Total Participants</p><p className="font-display text-2xl font-bold">{totalParticipants}</p></div>
           </CardContent>
         </Card>
+        <Card className="group overflow-hidden transition-shadow hover:shadow-md hover:shadow-primary/5">
+          <CardContent className="relative flex items-center gap-4 p-5">
+            <LeafSVG className="absolute -right-4 -top-4 h-20 w-20 rotate-45 text-primary opacity-50 transition-opacity group-hover:opacity-100" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary"><Award className="h-6 w-6" /></div>
+            <div><p className="text-sm text-muted-foreground">Completed Activities</p><p className="font-display text-2xl font-bold">{approvedActivities.length}</p></div>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Completed Activities with Certificates */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="font-display text-lg flex items-center gap-2">
+            <Award className="h-5 w-5 text-primary" /> Completed Activities & Certificates
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {approvedActivities.length === 0 ? (
+            <p className="py-8 text-center text-muted-foreground">No approved activities yet. Submit an activity to earn certificates!</p>
+          ) : (
+            <div className="space-y-3">
+              {approvedActivities.map((activity) => (
+                <div key={activity.id} className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-secondary/30">
+                  <div className="flex-1 min-w-0 mr-3">
+                    <p className="text-sm font-medium">{TYPE_LABELS[activity.type] || activity.type}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(activity.created_at).toLocaleDateString()} · ⭐ {activity.points_awarded} pts
+                      {activity.waste_kg ? ` · ${activity.waste_kg} kg waste` : ""}
+                    </p>
+                    {activity.description && (
+                      <p className="text-xs text-muted-foreground/70 truncate mt-0.5">{activity.description}</p>
+                    )}
+                  </div>
+                  <CertificateDialog activity={activity} userName={profile?.name || "Organizer"} />
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* My Events */}
       <Card className="mt-6">
