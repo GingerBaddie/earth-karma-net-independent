@@ -92,6 +92,48 @@ export type Database = {
         }
         Relationships: []
       }
+      coupons: {
+        Row: {
+          coupon_code: string
+          created_at: string
+          description: string | null
+          expiry_date: string | null
+          icon: string
+          id: string
+          is_active: boolean
+          max_redemptions: number | null
+          points_cost: number
+          title: string
+          total_redeemed: number
+        }
+        Insert: {
+          coupon_code: string
+          created_at?: string
+          description?: string | null
+          expiry_date?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          max_redemptions?: number | null
+          points_cost: number
+          title: string
+          total_redeemed?: number
+        }
+        Update: {
+          coupon_code?: string
+          created_at?: string
+          description?: string | null
+          expiry_date?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          max_redemptions?: number | null
+          points_cost?: number
+          title?: string
+          total_redeemed?: number
+        }
+        Relationships: []
+      }
       event_checkins: {
         Row: {
           checked_in_at: string
@@ -355,6 +397,38 @@ export type Database = {
           },
         ]
       }
+      user_coupons: {
+        Row: {
+          coupon_id: string
+          id: string
+          points_spent: number
+          redeemed_at: string
+          user_id: string
+        }
+        Insert: {
+          coupon_id: string
+          id?: string
+          points_spent: number
+          redeemed_at?: string
+          user_id: string
+        }
+        Update: {
+          coupon_id?: string
+          id?: string
+          points_spent?: number
+          redeemed_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_coupons_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_rewards: {
         Row: {
           id: string
@@ -493,6 +567,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      redeem_coupon: { Args: { p_coupon_id: string }; Returns: undefined }
       reject_organizer_application: {
         Args: { p_application_id: string; p_remarks?: string }
         Returns: undefined
