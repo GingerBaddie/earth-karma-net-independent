@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Users, CalendarDays, Activity, TrendingUp, ArrowRight, CheckCircle2, XCircle } from "lucide-react";
+import { Users, CalendarDays, Activity, TrendingUp, ArrowRight, CheckCircle2, XCircle, Award } from "lucide-react";
 import { LeafSVG } from "@/components/NatureDecorations";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -61,7 +61,7 @@ export default function AdminDashboard() {
   const handleApprove = async (activityId: string) => {
     const { error } = await supabase.rpc("approve_activity", { activity_id: activityId });
     if (error) { toast.error("Failed to approve"); return; }
-    toast.success("Activity approved!");
+    toast.success("Activity approved! 🎉 A certificate of appreciation has been issued to the volunteer.");
     setPendingActivities((prev) => prev.filter((a) => a.id !== activityId));
   };
 

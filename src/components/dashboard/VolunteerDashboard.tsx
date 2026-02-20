@@ -11,6 +11,7 @@ import { LeafSVG } from "@/components/NatureDecorations";
 import CheckinHistory from "@/components/dashboard/CheckinHistory";
 import BadgeShowcase from "@/components/badges/BadgeShowcase";
 import BadgeUnlockAnimation from "@/components/badges/BadgeUnlockAnimation";
+import CertificateDialog from "@/components/dashboard/CertificateDialog";
 import { Link } from "react-router-dom";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -288,6 +289,9 @@ export default function VolunteerDashboard() {
                   <div className="flex items-center gap-2">
                     {a.points_awarded > 0 && <span className="text-sm font-semibold text-primary">+{a.points_awarded} pts</span>}
                     <Badge variant="secondary" className={STATUS_COLORS[a.status]}>{a.status}</Badge>
+                    {a.status === "approved" && (
+                      <CertificateDialog activity={a} userName={profile?.name || "Eco Warrior"} />
+                    )}
                   </div>
                 </div>
               ))}
