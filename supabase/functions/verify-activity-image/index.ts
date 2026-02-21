@@ -28,73 +28,51 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const GOOGLE_AI_KEY = Deno.env.get("GOOGLE_AI_KEY");
+    if (!GOOGLE_AI_KEY) {
+      throw new Error("GOOGLE_AI_KEY is not configured");
     }
 
     const activityDescription = ACTIVITY_LABELS[activityType] || activityType;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are an image verification assistant for an environmental volunteering app. Your job is to determine whether an uploaded photo shows evidence of a specific activity type. Be reasonably lenient — the photo doesn't need to be perfect, just clearly related to the activity.",
-          },
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: `Does this image show evidence of "${activityDescription}"? Analyze the image and call the verify_image function with your assessment.`,
-              },
-              {
-                type: "image_url",
-                image_url: { url: imageBase64 },
-              },
-            ],
-          },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "verify_image",
-              description:
-                "Return the verification result for whether the image matches the expected activity type.",
-              parameters: {
-                type: "object",
-                properties: {
-                  match: {
-                    type: "boolean",
-                    description: "True if the image shows the expected activity.",
-                  },
-                  confidence: {
-                    type: "number",
-                    description: "Confidence score between 0 and 1.",
-                  },
-                  reason: {
-                    type: "string",
-                    description: "Short explanation of why the image does or does not match.",
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_AI_KEY}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [
+                {
+                  text: `You are an image verification assistant for an environmental volunteering app. Your job is to determine whether an uploaded photo shows evidence of a specific activity type. Be reasonably lenient — the photo doesn't need to be perfect, just clearly related to the activity.
+
+Does this image show evidence of "${activityDescription}"? Respond with a JSON object containing:
+- match: boolean (true if image shows the expected activity)
+- confidence: number (confidence score between 0 and 1)
+- reason: string (short explanation of your assessment)`,
+                },
+                {
+                  inlineData: {
+                    mimeType: "image/jpeg",
+                    data: imageBase64.split(",")[1] || imageBase64,
                   },
                 },
-                required: ["match", "confidence", "reason"],
-                additionalProperties: false,
-              },
+              ],
             },
+          ],
+          generationConfig: {
+            temperature: 1,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1024,
           },
-        ],
-        tool_choice: { type: "function", function: { name: "verify_image" } },
-      }),
-    });
+        }),
+      }
+    );
 
     if (!response.ok) {
       if (response.status === 429) {
@@ -115,9 +93,11 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-
-    if (!toolCall?.function?.arguments) {
+    
+    // Parse the response from Google Gemini API
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    if (!content) {
       // Fallback: allow submission but mark as unverified
       return new Response(
         JSON.stringify({ match: true, confidence: 0, reason: "Verification unavailable — allowed by default." }),
@@ -125,9 +105,34 @@ serve(async (req) => {
       );
     }
 
-    const result = JSON.parse(toolCall.function.arguments);
+    // Extract JSON from the response text
+    let result;
+    try {
+      // Try to parse the content as JSON
+      result = JSON.parse(content);
+    } catch {
+      // Try to extract JSON from text with markdown code blocks
+      const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/) || 
+                        content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        result = JSON.parse(jsonMatch[1] || jsonMatch[0]);
+      } else {
+        // Fallback if parsing fails
+        return new Response(
+          JSON.stringify({ match: true, confidence: 0, reason: "Verification unavailable — allowed by default." }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
 
-    return new Response(JSON.stringify(result), {
+    // Ensure the result has the required fields
+    const verificationResult = {
+      match: result.match || false,
+      confidence: result.confidence || 0,
+      reason: result.reason || "Unable to verify image",
+    };
+
+    return new Response(JSON.stringify(verificationResult), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
