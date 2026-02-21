@@ -1,7 +1,12 @@
 
 -- Add checkin_code and attendance_points to events
-ALTER TABLE public.events ADD COLUMN checkin_code text UNIQUE DEFAULT encode(gen_random_bytes(6), 'hex');
+ALTER TABLE public.events ADD COLUMN checkin_code text UNIQUE;
 ALTER TABLE public.events ADD COLUMN attendance_points integer NOT NULL DEFAULT 25;
+
+-- Generate checkin codes for existing events
+UPDATE public.events 
+SET checkin_code = substr(md5(random()::text || clock_timestamp()::text), 1, 8)
+WHERE checkin_code IS NULL;
 
 -- Create event_checkins table
 CREATE TABLE public.event_checkins (

@@ -67,7 +67,12 @@ supabase login
 3. Link your project:
 ```bash
 cd /workspaces/earth-karma-net-independent
-supabase link --project-id your_project_id
+# Option A (Interactive - recommended):
+supabase link
+# Then select your project from the list when prompted
+
+# Option B (Direct command):
+supabase link --project-ref your_project_id
 ```
 
 4. Push migrations to your remote database:
@@ -99,7 +104,10 @@ Edge Functions handle:
 ### Deploy Using CLI:
 
 ```bash
-# Make sure you're logged in and linked
+# Make sure you're logged in and linked first!
+supabase link  # or supabase link --project-ref YOUR_PROJECT_ID
+
+# Then deploy the functions:
 supabase functions deploy verify-activity-image --no-verify-jwt
 supabase functions deploy seed-admin --no-verify-jwt
 supabase functions deploy manage-user-status --no-verify-jwt

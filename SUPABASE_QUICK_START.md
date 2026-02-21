@@ -38,7 +38,12 @@ project_id = "YOUR_ID"
 npm install -g supabase
 supabase login
 cd /workspaces/earth-karma-net-independent
-supabase link --project-id YOUR_ID
+# Option A (Interactive - recommended):
+supabase link
+# Then select your project from the list
+
+# Option B (Direct):
+supabase link --project-ref YOUR_ID
 ```
 
 ### 6️⃣ Apply Migrations & Deploy Functions
@@ -144,7 +149,9 @@ Before creating your first user/activity, ensure:
 | Issue | Fix |
 |-------|-----|
 | CLI says "not authenticated" | Run `supabase login` |
-| Link fails with "Project not found" | Verify project ID is correct |
+| "unknown flag: --project-id" | Use `supabase link` (interactive) or `supabase link --project-ref YOUR_ID` |
+| Link fails with "Project not found" | Verify project ID is correct; try interactive mode with `supabase link` |
+| CLI not found after install | Restart terminal or run `npx supabase link` |
 | Migrations fail | Check that database is accessible; try running in Supabase SQL Editor manually |
 | Functions don't deploy | Make sure you're logged in and linked |
 | Edge functions return 404 | Wait 2 minutes after deploying; check Supabase Dashboard to confirm |

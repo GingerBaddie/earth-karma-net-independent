@@ -80,10 +80,14 @@ cd /workspaces/earth-karma-net-independent
 ```
 - [ ] Link to your Supabase project:
 ```bash
-supabase link --project-id your_project_id_here
+# Option A (Interactive - recommended):
+supabase link
+# Select your project from the list when prompted
+
+# Option B (Direct command):
+supabase link --project-ref your_project_id_here
 ```
-- [ ] It will ask to download latest schema history (click "y" for yes)
-- [ ] You should see "✅ Linked to project"
+- [ ] You should see a success message confirming the link
 
 ---
 
@@ -173,8 +177,8 @@ supabase functions deploy manage-user-status --no-verify-jwt
 ### Step 14: Seed Admin User
 - [ ] Run in terminal:
 ```bash
-curl -X POST "https://your_project_id.supabase.co/functions/v1/seed-admin" \
-  -H "Authorization: Bearer your_anon_key" \
+curl -X POST "https://khxsnjioemhtktdrgyuq.supabase.co/functions/v1/seed-admin" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoeHNuamlvZW1odGt0ZHJneXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2NDIwMTgsImV4cCI6MjA4NzIxODAxOH0.a0Hd_2ZGgcm7jAgMF70_hb3Rt3FaLMcOsmRokqJt52U" \
   -H "Content-Type: application/json"
 ```
 - [ ] Replace:
@@ -213,7 +217,7 @@ npm install
 ### Step 17: Generate TypeScript Types
 - [ ] Run:
 ```bash
-supabase gen types typescript --project-id your_project_id > src/integrations/supabase/types.ts
+supabase gen types typescript --project-id khxsnjioemhtktdrgyuq > src/integrations/supabase/types.ts
 ```
 - [ ] This generates database types for TypeScript autocomplete
 - [ ] Verify `src/integrations/supabase/types.ts` was updated
