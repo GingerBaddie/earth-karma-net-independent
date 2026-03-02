@@ -76,17 +76,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
       options: {
-        data: { name },
+        data: { name, role: selectedRole },
         emailRedirectTo: window.location.origin,
       },
     });
     if (error) throw error;
     if (data.user) {
-      const { error: roleError } = await supabase.from("user_roles").insert({
-        user_id: data.user.id,
-        role: selectedRole,
-      });
-      if (roleError) throw roleError;
+      // Role is now inserted by the handle_new_user() database trigger via metadata
       await supabase.from("profiles").update({ name, city: city || null }).eq("user_id", data.user.id);
     }
   };
